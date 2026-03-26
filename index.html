@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>
+  // ALPHA — Carrega produtos do GitHub (visivel em qualquer dispositivo)
+  window.addEventListener('DOMContentLoaded', function() {
+    window.loadProducts = async function() {
+      try {
+        const r = await fetch(
+          'https://raw.githubusercontent.com/vitrinealphasuplementos/vitrinealphasuplementos.github.io/main/produtos.json?t=' + Date.now()
+        );
+        if (r.ok) {
+          window.products = await r.json();
+        } else { throw new Error('fail'); }
+      } catch(e) {
+        try { window.products = JSON.parse(localStorage.getItem('alphaProducts') || '[]'); } catch(e2) { window.products = []; }
+        if (!window.products.length && typeof getDefaultProducts === 'function') window.products = getDefaultProducts();
+      }
+      if (typeof renderCategories === 'function') renderCategories();
+      if (typeof renderProducts === 'function') renderProducts();
+    };
+    loadProducts();
+  });
+  </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alpha Suplementos</title>
