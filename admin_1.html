@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Alpha Suplementos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #e63946;
+    --secondary: #ff6b35;
+    --success: #2ec4b6;
+    --bg: #f0f2f5;
+    --sidebar: #1a1a2e;
+    --sidebar-w: 240px;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --text: #1a1a2e;
+    --muted: #666;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:var(--sidebar-w);
+    background:var(--sidebar);
+    color:#fff;
+    position:fixed;
+    top:0; left:0; bottom:0;
+    overflow-y:auto;
+    z-index:100;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar-logo {
+    padding:24px 20px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    letter-spacing:1px;
+    color:var(--secondary);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .sidebar-logo span { font-size:28px; }
+  .sidebar-nav { flex:1; padding:12px 0; }
+  .nav-item {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 20px;
+    cursor:pointer;
+    transition:all .2s;
+    font-size:14px;
+    font-weight:600;
+    color:rgba(255,255,255,.7);
+    border-left:3px solid transparent;
+  }
+  .nav-item:hover { background:rgba(255,255,255,.05); color:#fff; }
+  .nav-item.active { background:rgba(230,57,70,.15); color:var(--secondary); border-left-color:var(--secondary); }
+  .nav-item .icon { font-size:18px; width:24px; text-align:center; }
+  .sidebar-footer {
+    padding:16px 20px;
+    border-top:1px solid rgba(255,255,255,.1);
+    font-size:12px;
+    color:rgba(255,255,255,.4);
+  }
+  .btn-preview {
+    display:block;
+    margin:12px 16px;
+    background:var(--secondary);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:12px;
+    text-align:center;
+    text-decoration:none;
+    font-family:'Barlow',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .2s;
+  }
+  .btn-preview:hover { background:#e05520; }
+
+  /* MAIN */
+  .main {
+    margin-left:var(--sidebar-w);
+    flex:1;
+    padding:24px;
+    min-height:100vh;
+  }
+  .page-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:24px;
+  }
+  .page-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px; }
+  .page-title span { color:var(--primary); }
+
+  /* CARDS */
+  .card {
+    background:var(--card);
+    border-radius:14px;
+    padding:24px;
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+  }
+  .card-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px;
+    margin-bottom:16px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--border);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  /* FORM */
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%;
+    padding:10px 14px;
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    font-family:'Barlow',sans-serif;
+    font-size:14px;
+    transition:border-color .2s;
+    outline:none;
+    background:#fff;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--primary); }
+  .form-group textarea { resize:vertical; min-height:80px; }
+  .form-group input[type=color] { padding:4px; height:42px; cursor:pointer; }
+  .form-hint { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* BUTTONS */
+  .btn {
+    padding:10px 24px;
+    border:none;
+    border-radius:8px;
+    font-family:'Barlow',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .2s;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .btn-primary:hover { background:#c62a35; transform:translateY(-1px); }
+  .btn-success { background:var(--success); color:#fff; }
+  .btn-success:hover { background:#24a99e; }
+  .btn-secondary { background:#f0f0f0; color:var(--text); }
+  .btn-secondary:hover { background:#e0e0e0; }
+  .btn-danger { background:#ff4757; color:#fff; }
+  .btn-danger:hover { background:#e63232; }
+  .btn-sm { padding:6px 14px; font-size:12px; }
+
+  /* TOGGLE */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:14px; font-weight:600; }
+  .toggle-desc { font-size:12px; color:var(--muted); }
+  .toggle { position:relative; width:44px; height:24px; cursor:pointer; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:24px; transition:.3s; }
+  .toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.3s; }
+  .toggle input:checked + .toggle-slider { background:var(--success); }
+  .toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead tr { background:#f8f8f8; }
+  th { padding:10px 14px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid var(--border); white-space:nowrap; }
+  td { padding:12px 14px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  tr:hover td { background:#fafafa; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-active { background:#e8faf8; color:var(--success); }
+  .badge-expired { background:#fff3e0; color:#f7b731; }
+  .badge-empty { background:#ffeaea; color:var(--primary); }
+
+  /* STATS CARDS */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:20px; }
+  .stat-card { background:var(--card); border-radius:12px; padding:20px; box-shadow:var(--shadow); }
+  .stat-card .num { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:1; color:var(--primary); }
+  .stat-card .lbl { font-size:12px; color:var(--muted); margin-top:4px; }
+
+  /* PRODUCTS */
+  .products-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .product-row-img { width:40px; height:40px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; overflow:hidden; }
+  .product-row-img img { width:100%; height:100%; object-fit:cover; }
+
+  /* COLOR THEMES */
+  .themes-grid { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .theme-btn {
+    border:2px solid var(--border);
+    border-radius:10px;
+    padding:10px 16px;
+    cursor:pointer;
+    font-family:'Barlow',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    background:#fff;
+    transition:all .2s;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .theme-btn:hover { border-color:var(--primary); }
+  .theme-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.1); }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200;
+    display:flex; align-items:center; justify-content:center; padding:16px;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .modal-overlay.show { opacity:1; pointer-events:all; }
+  .modal-box {
+    background:#fff; border-radius:16px; max-width:620px; width:100%;
+    max-height:90vh; overflow-y:auto;
+    transform:scale(.95); transition:transform .3s;
+    padding:28px;
+  }
+  .modal-overlay.show .modal-box { transform:scale(1); }
+  .modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; margin-bottom:20px; }
+  .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+
+  /* POPUP PREVIEW */
+  .popup-preview {
+    background:#1a1a2e;
+    border-radius:12px;
+    overflow:hidden;
+    max-width:360px;
+    margin-top:16px;
+  }
+  .popup-preview-img { height:120px; background:linear-gradient(135deg,#e63946,#ff6b35); display:flex; align-items:center; justify-content:center; font-size:40px; }
+  .popup-preview-body { padding:16px; color:#fff; }
+  .popup-preview-body h4 { font-family:'Bebas Neue',sans-serif; font-size:22px; }
+  .popup-preview-body p { font-size:12px; color:rgba(255,255,255,.7); margin:6px 0; }
+  .popup-preview-coupon { background:rgba(255,255,255,.1); border-radius:8px; padding:8px 14px; font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; display:inline-block; margin-top:8px; }
+
+  /* GUIDE STEPS */
+  .guide-step { display:flex; gap:16px; margin-bottom:24px; }
+  .step-num { width:36px; height:36px; border-radius:50%; background:var(--primary); color:#fff; font-family:'Bebas Neue',sans-serif; font-size:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-content h4 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .step-content p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .step-content code { background:#f0f0f0; padding:2px 8px; border-radius:4px; font-family:monospace; font-size:12px; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; right:24px;
+    background:#1a1a2e; color:#fff;
+    padding:12px 24px; border-radius:50px; font-size:14px; font-weight:600;
+    z-index:500; transform:translateY(80px); transition:transform .3s;
+  }
+  .toast.show { transform:translateY(0); }
+
+  /* SECTION PAGES */
+  .section-page { display:none; }
+  .section-page.active { display:block; }
+
+  @media(max-width:768px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; }
+    .form-row { grid-template-columns:1fr; }
+  }
+
+  /* ── GITHUB SYNC ── */
+  .gh-status {
+    margin: 8px 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .gh-status:hover { opacity: .85; }
+  .gh-status.connected { background: rgba(46,196,182,.15); color: #2ec4b6; border: 1px solid rgba(46,196,182,.25); }
+  .gh-status.disconnected { background: rgba(230,57,70,.12); color: #e63946; border: 1px solid rgba(230,57,70,.2); }
+  .gh-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .connected .gh-dot { background: #2ec4b6; }
+  .disconnected .gh-dot { background: #e63946; }
+  .btn-gh-sync {
+    display: block;
+    margin: 4px 12px 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+    width: calc(100% - 24px);
+  }
+  .btn-gh-sync:hover { background: #c62a35; }
+
+  /* TOKEN MODAL */
+  #tokenModal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.65);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; padding: 16px;
+  }
+  #tokenModal.hidden { display: none; }
+  .token-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%; max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  .token-box h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .token-box p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+  .token-box input[type=password] {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'Barlow', sans-serif;
+    font-size: 14px; outline: none; margin-bottom: 12px;
+  }
+  .token-box input[type=password]:focus { border-color: var(--primary); }
+  .token-box .btn-primary { width: 100%; justify-content: center; }
+  .token-hint {
+    margin-top: 14px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .token-hint code {
+    background: #ffe8e8;
+    color: var(--primary);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .token-skip {
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .token-skip:hover { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><span>⚡</span>ALPHA ADMIN</div>
+  <div id="ghStatus" class="gh-status disconnected" onclick="openTokenModal()" title="Clique para configurar o token GitHub">
+    <div class="gh-dot"></div><span id="ghStatusTxt">Sem GitHub</span>
+  </div>
+  <button class="btn-gh-sync" onclick="syncGitHub()">☁️ Salvar no GitHub</button>
+  <div class="sidebar-nav">
+    <div class="nav-item active" onclick="showPage('store')"><span class="icon">🏪</span>Loja</div>
+    <div class="nav-item" onclick="showPage('banner')"><span class="icon">🖼️</span>Banner</div>
+    <div class="nav-item" onclick="showPage('popup')"><span class="icon">🎯</span>Pop-up</div>
+    <div class="nav-item" onclick="showPage('colors')"><span class="icon">🎨</span>Cores</div>
+    <div class="nav-item" onclick="showPage('products')"><span class="icon">📦</span>Produtos</div>
+    <div class="nav-item" onclick="showPage('sheets')"><span class="icon">📊</span>Google Sheets</div>
+    <div class="nav-item" onclick="showPage('upsells')"><span class="icon">⚡</span>Upsells</div>
+    <div class="nav-item" onclick="showPage('coupons')"><span class="icon">🎟️</span>Cupons</div>
+    <div class="nav-item" onclick="showPage('guide')"><span class="icon">📖</span>Guia GitHub</div>
+  </div>
+  <a class="btn-preview" href="index.html" target="_blank">👁 Ver Loja →</a>
+  <div class="sidebar-footer">Alpha Suplementos v1.0</div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- PAGE: STORE -->
+  <div class="section-page active" id="page-store">
+    <div class="page-header">
+      <div class="page-title">🏪 Configurações da <span>Loja</span></div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Tudo</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🏷️ Dados Gerais</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome da Loja</label><input type="text" id="cfg-storeName" placeholder="Alpha Suplementos"></div>
+        <div class="form-group"><label>CNPJ / CPF</label><input type="text" id="cfg-cnpj" placeholder="00.000.000/0001-00"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>WhatsApp (com DDD)</label><input type="text" id="cfg-whatsapp" placeholder="5588999999999"><p class="form-hint">Apenas números, incluindo código do país (55)</p></div>
+        <div class="form-group"><label>Valor para Frete Grátis (R$)</label><input type="number" id="cfg-freeShipping" placeholder="200" min="0"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🖼️ Logo e Favicon</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>URL da Logomarca</label>
+          <input type="url" id="cfg-logoUrl" placeholder="https://..." oninput="previewLogo()">
+          <p class="form-hint">Use imgbb.com para hospedar sua imagem</p>
+          <img id="logoPreview" src="" alt="" style="max-height:60px;margin-top:10px;display:none;border-radius:8px;">
+        </div>
+        <div class="form-group">
+          <label>Favicon (URL PNG 32×32 ou Emoji)</label>
+          <input type="text" id="cfg-favicon" placeholder="🏋️ ou https://...">
+          <p class="form-hint">Emoji para ícone de emoji, URL para imagem PNG</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🚚 Configurações de Frete (Melhor Envio)</div>
+      <div class="form-row">
+        <div class="form-group"><label>Token Melhor Envio</label><input type="password" id="cfg-melhorEnvioToken" placeholder="Token da API"></div>
+        <div class="form-group"><label>CEP de Origem</label><input type="text" id="cfg-cepOrigem" placeholder="00000-000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Peso padrão (kg)</label><input type="number" id="cfg-peso" placeholder="0.5" step="0.1"></div>
+        <div class="form-group"><label>Altura (cm)</label><input type="number" id="cfg-altura" placeholder="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Largura (cm)</label><input type="number" id="cfg-largura" placeholder="15"></div>
+        <div class="form-group"><label>Comprimento (cm)</label><input type="number" id="cfg-comprimento" placeholder="20"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: BANNER -->
+  <div class="section-page" id="page-banner">
+    <div class="page-header">
+      <div class="page-title">🖼️ Banner <span>Hero</span></div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🎨 Conteúdo do Banner</div>
+      <div class="form-group"><label>URL da Imagem de Fundo</label><input type="url" id="cfg-heroBg" placeholder="https://..."></div>
+      <div class="form-group"><label>Etiqueta / Tag</label><input type="text" id="cfg-heroTag" placeholder="Loja Oficial"></div>
+      <div class="form-group"><label>Título Principal (suporta HTML)</label><input type="text" id="cfg-heroTitle" placeholder='ALPHA <span style="color:var(--primary)">SUPLEMENTOS</span>'></div>
+      <div class="form-group"><label>Subtítulo</label><input type="text" id="cfg-heroSubtitle" placeholder="Qualidade e performance..."></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Estatísticas (3 números)</div>
+      <div id="heroStatsFields"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addHeroStat()">+ Adicionar Estatística</button>
+    </div>
+  </div>
+
+  <!-- PAGE: POPUP -->
+  <div class="section-page" id="page-popup">
+    <div class="page-header">
+      <div class="page-title">🎯 Pop-up <span>Banner</span></div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+      <div>
+        <div class="card">
+          <div class="card-title">⚙️ Configurações</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Ativar Pop-up</div><div class="toggle-desc">Exibe o banner automático ao entrar na loja</div></div>
+            <label class="toggle"><input type="checkbox" id="cfg-popupEnabled" onchange="previewPopup()"><span class="toggle-slider"></span></label>
+          </div>
+          <br>
+          <div class="form-group">
+            <label>Frequência</label>
+            <select id="cfg-popupFrequency" onchange="previewPopup()">
+              <option value="always">Sempre (a cada visita)</option>
+              <option value="daily">Uma vez por dia</option>
+              <option value="weekly">Uma vez por semana</option>
+              <option value="once">Uma vez por dispositivo</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Data de Início</label><input type="date" id="cfg-popupDateStart"></div>
+            <div class="form-group"><label>Data de Fim</label><input type="date" id="cfg-popupDateEnd"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📝 Conteúdo</div>
+          <div class="form-group"><label>URL da Imagem</label><input type="url" id="cfg-popupImage" placeholder="https://..." oninput="previewPopup()"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Título</label><input type="text" id="cfg-popupTitle" placeholder="OFERTA ESPECIAL" oninput="previewPopup()"></div>
+            <div class="form-group"><label>Descrição</label><input type="text" id="cfg-popupDesc" placeholder="Use o cupom..." oninput="previewPopup()"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Cupom em Destaque</label><input type="text" id="cfg-popupCoupon" placeholder="ALPHA10" oninput="previewPopup()" style="text-transform:uppercase"></div>
+            <div class="form-group"><label>Texto do Botão</label><input type="text" id="cfg-popupBtnText" placeholder="VER OFERTAS" oninput="previewPopup()"></div>
+          </div>
+          <div class="form-group">
+            <label>Ação do Botão</label>
+            <select id="cfg-popupBtnAction">
+              <option value="close">Fechar pop-up</option>
+              <option value="store">Ir para a loja</option>
+              <option value="whatsapp">Abrir WhatsApp</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">👁 Pré-visualização</div>
+          <div class="popup-preview" id="popupPreview">
+            <div class="popup-preview-img" id="ppImg">🎁</div>
+            <div class="popup-preview-body">
+              <h4 id="ppTitle">OFERTA ESPECIAL</h4>
+              <p id="ppDesc">Use o cupom e ganhe desconto!</p>
+              <div class="popup-preview-coupon" id="ppCoupon">ALPHA10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: COLORS -->
+  <div class="section-page" id="page-colors">
+    <div class="page-header">
+      <div class="page-title">🎨 Cores da <span>Loja</span></div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🖌️ Temas Prontos</div>
+      <div class="themes-grid">
+        <button class="theme-btn" onclick="applyTheme('alpha')"><div class="theme-dot" style="background:#e63946"></div>Alpha (Padrão)</button>
+        <button class="theme-btn" onclick="applyTheme('dark')"><div class="theme-dot" style="background:#6c63ff"></div>Dark Purple</button>
+        <button class="theme-btn" onclick="applyTheme('ocean')"><div class="theme-dot" style="background:#00b4d8"></div>Ocean Blue</button>
+        <button class="theme-btn" onclick="applyTheme('forest')"><div class="theme-dot" style="background:#2d6a4f"></div>Forest Green</button>
+        <button class="theme-btn" onclick="applyTheme('gold')"><div class="theme-dot" style="background:#f7b731"></div>Gold Premium</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎨 Cores Personalizadas</div>
+      <div class="form-row">
+        <div class="form-group"><label>Cor Primária (botões, destaques)</label><input type="color" id="cfg-colorPrimary" value="#e63946"></div>
+        <div class="form-group"><label>Cor Secundária (badges, alertas)</label><input type="color" id="cfg-colorSecondary" value="#ff6b35"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Cor de Fundo</label><input type="color" id="cfg-colorBg" value="#f4f4f4"></div>
+        <div class="form-group"><label>Cor dos Cards</label><input type="color" id="cfg-colorCard" value="#ffffff"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: PRODUCTS -->
+  <div class="section-page" id="page-products">
+    <div class="products-header">
+      <div class="page-title">📦 <span>Produtos</span></div>
+      <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="productsTable">
+          <thead><tr><th></th><th>Nome</th><th>Categoria</th><th>Preço</th><th>PIX</th><th>Badge</th><th>Ações</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: SHEETS -->
+  <div class="section-page" id="page-sheets">
+    <div class="page-header">
+      <div class="page-title">📊 Google <span>Sheets</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Como importar do Google Sheets</div>
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-content"><h4>Crie a planilha</h4><p>Crie uma planilha no Google Sheets com as colunas: <code>nome</code>, <code>categoria</code>, <code>descricao</code>, <code>descricaoCompleta</code>, <code>preco</code>, <code>precoAntigo</code>, <code>precoPix</code>, <code>sabores</code>, <code>imagem</code>, <code>emoji</code>, <code>badge</code></p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-content"><h4>Publique como CSV</h4><p>Vá em <strong>Arquivo → Compartilhar → Publicar na web</strong>. Selecione a aba e formato <strong>CSV</strong>. Clique em Publicar e copie o link gerado.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-content"><h4>Cole a URL abaixo e importe</h4><p>Cole o link CSV no campo abaixo e clique em Importar.</p></div>
+      </div>
+      <div class="form-group"><label>URL CSV da Planilha</label><input type="url" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+        <div class="form-group" style="margin:0">
+          <select id="sheetsMode">
+            <option value="replace">Substituir todos os produtos</option>
+            <option value="add">Adicionar aos produtos existentes</option>
+          </select>
+        </div>
+        <button class="btn btn-success" onclick="importSheets()">⬇️ Importar Produtos</button>
+        <button class="btn btn-secondary" onclick="downloadCSVTemplate()">📥 Baixar Modelo CSV</button>
+      </div>
+      <div id="sheetsMsg" style="font-size:14px;font-weight:600;"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: UPSELLS -->
+  <div class="section-page" id="page-upsells">
+    <div class="page-header">
+      <div class="page-title">⚡ <span>Upsells</span></div>
+      <button class="btn btn-primary" onclick="openUpsellModal()">+ Novo Upsell</button>
+    </div>
+    <div class="card">
+      <div class="card-title">⏱️ Configurações do Relógio</div>
+      <div class="form-row">
+        <div class="form-group"><label>Duração do relógio (minutos)</label><input type="number" id="cfg-upsellDuration" value="10" min="1" max="60"></div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <div class="toggle-row" style="border:none;padding:0;width:100%;justify-content:flex-start;gap:16px;">
+            <div><div class="toggle-label">Ativar Relógio</div></div>
+            <label class="toggle"><input type="checkbox" id="cfg-upsellTimer" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveUpsellConfig()">💾 Salvar Config</button>
+    </div>
+    <div class="card">
+      <div class="card-title">⚡ Lista de Upsells</div>
+      <div id="upsellsList"></div>
+      <div id="noUpsells" style="text-align:center;padding:32px;color:var(--muted);">Nenhum upsell cadastrado ainda.</div>
+    </div>
+  </div>
+
+  <!-- PAGE: COUPONS -->
+  <div class="section-page" id="page-coupons">
+    <div class="page-header">
+      <div class="page-title">🎟️ <span>Cupons</span></div>
+      <button class="btn btn-primary" onclick="openCouponModal()">+ Novo Cupom</button>
+    </div>
+    <div class="stats-grid" id="couponStats"></div>
+    <div class="card">
+      <div class="card-title">🎟️ Cupons Cadastrados</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Validade</th><th>Usos</th><th>Vendas</th><th>Desconto</th><th>Ações</th></tr></thead>
+          <tbody id="couponsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: GUIDE -->
+  <div class="section-page" id="page-guide">
+    <div class="page-header"><div class="page-title">📖 Guia <span>GitHub Pages</span></div></div>
+    <div class="card">
+      <div class="card-title">🚀 Publicar sua Loja Gratuitamente</div>
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-content"><h4>Crie uma conta no GitHub</h4><p>Acesse <code>github.com</code> e crie uma conta gratuita se ainda não tiver.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-content"><h4>Crie um repositório público</h4><p>Clique em <strong>New repository</strong>. Dê um nome como <code>alpha-suplementos</code>. Selecione <strong>Public</strong>. Clique em <strong>Create repository</strong>.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-content"><h4>Faça upload dos arquivos</h4><p>Na página do repositório, clique em <strong>Add file → Upload files</strong>. Selecione <code>index.html</code> e <code>admin.html</code>. Clique em <strong>Commit changes</strong>.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-content"><h4>Ative o GitHub Pages</h4><p>Vá em <strong>Settings → Pages</strong>. Em <strong>Source</strong>, selecione <strong>Deploy from a branch</strong>. Selecione a branch <code>main</code> e pasta <code>/ (root)</code>. Clique em <strong>Save</strong>.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">5</div>
+        <div class="step-content"><h4>Aguarde e acesse</h4><p>Em alguns minutos, sua loja estará disponível em <code>https://SEU-USUARIO.github.io/alpha-suplementos/</code>. O painel admin fica em <code>.../admin.html</code>.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">6</div>
+        <div class="step-content"><h4>Como atualizar</h4><p>Para atualizar, repita o passo 3: faça upload do arquivo atualizado. O GitHub substituirá automaticamente.</p></div>
+      </div>
+      <div style="background:#ffeaea;border-radius:10px;padding:16px;margin-top:8px;">
+        <strong>⚠️ Importante:</strong> As configurações do painel admin (produtos, cupons, cores etc.) ficam salvas no <strong>localStorage do seu navegador</strong>. Se você trocar de computador ou limpar o cache, precisará reconfigurar. Mantenha um backup dos seus produtos via Google Sheets!
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL: PRODUCT -->
+<div class="modal-overlay" id="productModalOverlay" onclick="closeProductModal(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="productModalTitle">📦 Novo Produto</div>
+    <input type="hidden" id="editProductId">
+    <div class="form-row">
+      <div class="form-group"><label>Nome do Produto</label><input type="text" id="p-name" placeholder="Ex: Whey Protein 1kg"></div>
+      <div class="form-group"><label>Categoria</label><input type="text" id="p-category" placeholder="Proteínas, Creatina..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Badge</label><input type="text" id="p-badge" placeholder="Mais Vendido, Novo..."></div>
+      <div class="form-group"><label>Emoji (ícone)</label><input type="text" id="p-emoji" placeholder="🥛"></div>
+    </div>
+    <div class="form-group"><label>Descrição Curta (aparece no card)</label><textarea id="p-descShort" placeholder="Descrição breve..."></textarea></div>
+    <div class="form-group"><label>Descrição Completa (aparece no modal)</label><textarea id="p-descFull" rows="4" placeholder="Descrição detalhada do produto..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Preço Normal (R$)</label><input type="number" id="p-price" step="0.01" placeholder="89.90"></div>
+      <div class="form-group"><label>Preço Antigo / De (R$)</label><input type="number" id="p-priceOld" step="0.01" placeholder="129.90"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Preço PIX (R$)</label><input type="number" id="p-pricePix" step="0.01" placeholder="85.40"></div>
+      <div class="form-group"><label>Avaliação (1-5)</label><input type="number" id="p-rating" min="1" max="5" step="0.5" placeholder="5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nº de Avaliações</label><input type="number" id="p-reviews" placeholder="248"></div>
+      <div class="form-group"><label>URL da Imagem</label><input type="url" id="p-image" placeholder="https://..."></div>
+    </div>
+    <div class="form-group"><label>Sabores / Variações (separados por vírgula)</label><input type="text" id="p-flavors" placeholder="Chocolate, Baunilha, Morango"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeProductModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: UPSELL -->
+<div class="modal-overlay" id="upsellModalOverlay" onclick="closeUpsellModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">⚡ Novo Upsell</div>
+    <input type="hidden" id="editUpsellId" value="-1">
+    <div class="form-row">
+      <div class="form-group"><label>Emoji</label><input type="text" id="u-emoji" placeholder="🎁"></div>
+      <div class="form-group"><label>Nome</label><input type="text" id="u-name" placeholder="Nome do produto upsell"></div>
+    </div>
+    <div class="form-group"><label>Descrição</label><input type="text" id="u-desc" placeholder="Descrição breve..."></div>
+    <div class="form-group"><label>Preço (R$)</label><input type="number" id="u-price" step="0.01" placeholder="19.90"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUpsellModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUpsell()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: COUPON -->
+<div class="modal-overlay" id="couponModalOverlay" onclick="closeCouponModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">🎟️ Novo Cupom</div>
+    <div class="form-row">
+      <div class="form-group"><label>Código do Cupom</label><input type="text" id="c-code" placeholder="ALPHA10" style="text-transform:uppercase"></div>
+      <div class="form-group">
+        <label>Tipo de Desconto</label>
+        <select id="c-type" onchange="toggleCouponValue()">
+          <option value="percent">Percentual (%)</option>
+          <option value="fixed">Valor Fixo (R$)</option>
+          <option value="shipping">Frete Grátis</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" id="couponValueGroup"><label id="couponValueLabel">Valor do Desconto</label><input type="number" id="c-value" step="0.01" placeholder="10"></div>
+    <div class="form-group"><label>Descrição para o Cliente</label><input type="text" id="c-desc" placeholder="10% de desconto na primeira compra"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Data de Validade (opcional)</label><input type="date" id="c-expiry"></div>
+      <div class="form-group"><label>Limite de Usos (opcional)</label><input type="number" id="c-maxUses" placeholder="Ex: 100"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCouponModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCoupon()">💾 Criar Cupom</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOKEN MODAL -->
+<div id="tokenModal" class="hidden">
+  <div class="token-box">
+    <h2>🔑 GitHub Token</h2>
+    <p>Para salvar produtos diretamente no repositório, informe seu Personal Access Token.<br>
+    Fica salvo <strong>só no seu navegador</strong> — nunca fica no código.</p>
+    <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    <button class="btn btn-primary" onclick="saveToken()">Conectar ao GitHub</button>
+    <div class="token-hint">
+      <strong>Como gerar:</strong><br>
+      1. <code>github.com → Settings → Developer settings</code><br>
+      2. <code>Personal access tokens → Tokens (classic)</code><br>
+      3. <code>Generate new token (classic)</code><br>
+      4. Marque o escopo <code>repo</code> → clique <strong>Generate</strong><br>
+      5. Cole o token acima ✅
+    </div>
+    <span class="token-skip" onclick="skipToken()">Usar sem GitHub (modo local)</span>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="adminToast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let config = {};
+let products = [];
+let coupons = [];
+let upsells = [];
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+  populateConfigFields();
+  renderProductsTable();
+  renderCoupons();
+  renderUpsells();
+  renderHeroStats();
+  previewPopup();
+  updateCouponStats();
+});
+
+function loadAll() {
+  try { config = JSON.parse(localStorage.getItem('alphaConfig')||'{}'); } catch(e) { config={}; }
+  try { products = JSON.parse(localStorage.getItem('alphaProducts')||'[]'); } catch(e) { products=[]; }
+  if (!products.length) products = getDefaultProducts();
+  try { coupons = JSON.parse(localStorage.getItem('alphaCoupons')||'[]'); } catch(e) { coupons=[]; }
+  try { upsells = JSON.parse(localStorage.getItem('alphaUpsells')||'[]'); } catch(e) { upsells=[]; }
+}
+
+function getDefaultProducts() {
+  return [
+    { id:1, name:'Whey Protein Concentrado 1kg', category:'Proteínas', badge:'Mais Vendido', descShort:'Proteína de alta qualidade para ganho muscular.', descFull:'Whey Protein Concentrado com 24g de proteína por dose. Ideal para pós-treino e recuperação muscular.', price:89.90, priceOld:129.90, pricePix:85.40, emoji:'🥛', image:'', flavors:'Chocolate,Baunilha,Morango', rating:5, reviews:248 },
+    { id:2, name:'Creatina Monohidratada 300g', category:'Creatina', badge:'Top Rated', descShort:'Creatina pura para força e performance máxima.', descFull:'Creatina Monohidratada 100% pura. Aumenta força, potência e massa muscular.', price:49.90, priceOld:69.90, pricePix:47.40, emoji:'💊', image:'', flavors:'Sem Sabor', rating:5, reviews:312 },
+    { id:3, name:'Pré-Treino Extreme 300g', category:'Pré-Treino', badge:'Lançamento', descShort:'Energia explosiva e foco total para seu treino.', descFull:'Pré-treino com cafeína, beta-alanina e citrulina malato.', price:79.90, priceOld:99.90, pricePix:75.90, emoji:'⚡', image:'', flavors:'Frutas Vermelhas,Limão', rating:4, reviews:156 },
+  ];
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.section-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const pages = ['store','banner','popup','colors','products','sheets','upsells','coupons','guide'];
+  const idx = pages.indexOf(id);
+  if (idx >= 0) navItems[idx].classList.add('active');
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function populateConfigFields() {
+  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration'];
+  fields.forEach(f => {
+    const el = document.getElementById('cfg-'+f);
+    if (el && config[f] !== undefined) el.value = config[f];
+  });
+  // Popup
+  const pc = config.popup || {};
+  setVal('cfg-popupEnabled', pc.enabled, 'checkbox');
+  setVal('cfg-popupFrequency', pc.frequency || 'always');
+  setVal('cfg-popupDateStart', pc.dateStart || '');
+  setVal('cfg-popupDateEnd', pc.dateEnd || '');
+  setVal('cfg-popupImage', pc.image || '');
+  setVal('cfg-popupTitle', pc.title || '');
+  setVal('cfg-popupDesc', pc.desc || '');
+  setVal('cfg-popupCoupon', pc.coupon || '');
+  setVal('cfg-popupBtnText', pc.btnText || '');
+  setVal('cfg-popupBtnAction', pc.btnAction || 'close');
+  // Upsell timer
+  const ut = document.getElementById('cfg-upsellTimer');
+  if (ut) ut.checked = config.upsellTimer !== false;
+}
+function setVal(id, val, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (type === 'checkbox') el.checked = !!val;
+  else if (val !== undefined && val !== null) el.value = val;
+}
+function gatherConfig() {
+  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration'];
+  fields.forEach(f => {
+    const el = document.getElementById('cfg-'+f);
+    if (el) config[f] = el.value;
+  });
+  config.popup = {
+    enabled: document.getElementById('cfg-popupEnabled')?.checked,
+    frequency: document.getElementById('cfg-popupFrequency')?.value,
+    dateStart: document.getElementById('cfg-popupDateStart')?.value,
+    dateEnd: document.getElementById('cfg-popupDateEnd')?.value,
+    image: document.getElementById('cfg-popupImage')?.value,
+    title: document.getElementById('cfg-popupTitle')?.value,
+    desc: document.getElementById('cfg-popupDesc')?.value,
+    coupon: document.getElementById('cfg-popupCoupon')?.value,
+    btnText: document.getElementById('cfg-popupBtnText')?.value,
+    btnAction: document.getElementById('cfg-popupBtnAction')?.value,
+  };
+  // Hero stats
+  const stats = [];
+  document.querySelectorAll('.hero-stat-row').forEach(row => {
+    const num = row.querySelector('.hs-num')?.value;
+    const lbl = row.querySelector('.hs-lbl')?.value;
+    if (num || lbl) stats.push({ num, lbl });
+  });
+  if (stats.length) config.heroStats = stats;
+}
+function saveConfig() {
+  gatherConfig();
+  localStorage.setItem('alphaConfig', JSON.stringify(config));
+  localStorage.setItem('alphaProducts', JSON.stringify(products));
+  showToast('✅ Configurações salvas!');
+}
+function previewLogo() {
+  const url = document.getElementById('cfg-logoUrl').value;
+  const prev = document.getElementById('logoPreview');
+  if (url) { prev.src = url; prev.style.display = 'block'; }
+  else prev.style.display = 'none';
+}
+
+// HERO STATS
+function renderHeroStats() {
+  const stats = config.heroStats || [
+    {num:'5000+',lbl:'Clientes'},
+    {num:'100%',lbl:'Original'},
+    {num:'24h',lbl:'Atendimento'}
+  ];
+  const c = document.getElementById('heroStatsFields');
+  c.innerHTML = stats.map((s,i) => `
+    <div class="hero-stat-row form-row" style="margin-bottom:10px;align-items:flex-end;">
+      <div class="form-group" style="margin:0"><label>Número ${i+1}</label><input type="text" class="hs-num" value="${s.num}" placeholder="5000+"></div>
+      <div class="form-group" style="margin:0"><label>Texto ${i+1}</label><input type="text" class="hs-lbl" value="${s.lbl}" placeholder="Clientes"></div>
+      <button class="btn btn-danger btn-sm" onclick="this.closest('.hero-stat-row').remove()">🗑</button>
+    </div>
+  `).join('');
+}
+function addHeroStat() {
+  const c = document.getElementById('heroStatsFields');
+  const div = document.createElement('div');
+  div.className='hero-stat-row form-row';
+  div.style.marginBottom='10px';
+  div.style.alignItems='flex-end';
+  div.innerHTML=`<div class="form-group" style="margin:0"><label>Número</label><input type="text" class="hs-num" placeholder="500+"></div><div class="form-group" style="margin:0"><label>Texto</label><input type="text" class="hs-lbl" placeholder="Label"></div><button class="btn btn-danger btn-sm" onclick="this.closest('.hero-stat-row').remove()">🗑</button>`;
+  c.appendChild(div);
+}
+
+// POPUP PREVIEW
+function previewPopup() {
+  const title = document.getElementById('cfg-popupTitle')?.value || 'OFERTA ESPECIAL';
+  const desc = document.getElementById('cfg-popupDesc')?.value || 'Use o cupom e ganhe desconto!';
+  const coupon = document.getElementById('cfg-popupCoupon')?.value || 'ALPHA10';
+  const img = document.getElementById('cfg-popupImage')?.value;
+  document.getElementById('ppTitle').textContent = title;
+  document.getElementById('ppDesc').textContent = desc;
+  document.getElementById('ppCoupon').textContent = coupon || 'ALPHA10';
+  const ppImg = document.getElementById('ppImg');
+  if (img) ppImg.innerHTML = `<img src="${img}" style="width:100%;height:100%;object-fit:cover;">`;
+  else ppImg.textContent = '🎁';
+}
+
+// THEMES
+const THEMES = {
+  alpha: { colorPrimary:'#e63946', colorSecondary:'#ff6b35', colorBg:'#f4f4f4', colorCard:'#ffffff' },
+  dark:  { colorPrimary:'#6c63ff', colorSecondary:'#a29bfe', colorBg:'#1a1a2e', colorCard:'#16213e' },
+  ocean: { colorPrimary:'#00b4d8', colorSecondary:'#48cae4', colorBg:'#f0f8ff', colorCard:'#ffffff' },
+  forest:{ colorPrimary:'#2d6a4f', colorSecondary:'#52b788', colorBg:'#f0f7f4', colorCard:'#ffffff' },
+  gold:  { colorPrimary:'#f7b731', colorSecondary:'#f39c12', colorBg:'#1a1a2e', colorCard:'#16213e' },
+};
+function applyTheme(name) {
+  const t = THEMES[name];
+  if (!t) return;
+  Object.entries(t).forEach(([k,v]) => {
+    const el = document.getElementById('cfg-'+k);
+    if (el) el.value = v;
+    config[k] = v;
+  });
+  showToast(`✅ Tema ${name} aplicado!`);
+}
+
+// ============================================================
+// PRODUCTS
+// ============================================================
+function renderProductsTable() {
+  const tbody = document.getElementById('productsTableBody');
+  if (!products.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px;">Nenhum produto cadastrado.</td></tr>'; return; }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td><div class="product-row-img">${p.image ? `<img src="${p.image}" onerror="this.parentElement.textContent='${p.emoji||'📦'}'">` : p.emoji||'📦'}</div></td>
+      <td style="font-weight:600;max-width:200px;">${p.name}</td>
+      <td>${p.category||'—'}</td>
+      <td>R$ ${fmt(p.price)}</td>
+      <td>${p.pricePix ? 'R$ '+fmt(p.pricePix) : '—'}</td>
+      <td>${p.badge ? `<span class="badge badge-active">${p.badge}</span>` : '—'}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})" style="margin-left:4px;">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+}
+function openProductModal(id) {
+  clearProductFields();
+  document.getElementById('productModalTitle').textContent = id ? '✏️ Editar Produto' : '📦 Novo Produto';
+  document.getElementById('editProductId').value = id || '';
+  if (id) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('p-name').value = p.name||'';
+    document.getElementById('p-category').value = p.category||'';
+    document.getElementById('p-badge').value = p.badge||'';
+    document.getElementById('p-emoji').value = p.emoji||'';
+    document.getElementById('p-descShort').value = p.descShort||'';
+    document.getElementById('p-descFull').value = p.descFull||'';
+    document.getElementById('p-price').value = p.price||'';
+    document.getElementById('p-priceOld').value = p.priceOld||'';
+    document.getElementById('p-pricePix').value = p.pricePix||'';
+    document.getElementById('p-rating').value = p.rating||'';
+    document.getElementById('p-reviews').value = p.reviews||'';
+    document.getElementById('p-image').value = p.image||'';
+    document.getElementById('p-flavors').value = p.flavors||'';
+  }
+  document.getElementById('productModalOverlay').classList.add('show');
+}
+function editProduct(id) { openProductModal(id); }
+function closeProductModal(e) {
+  if (!e || e.target === document.getElementById('productModalOverlay')) {
+    document.getElementById('productModalOverlay').classList.remove('show');
+  }
+}
+function clearProductFields() {
+  ['p-name','p-category','p-badge','p-emoji','p-descShort','p-descFull','p-price','p-priceOld','p-pricePix','p-rating','p-reviews','p-image','p-flavors'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value='';
+  });
+}
+function saveProduct() {
+  const id = document.getElementById('editProductId').value;
+  const p = {
+    id: id ? parseInt(id) : Date.now(),
+    name: document.getElementById('p-name').value.trim(),
+    category: document.getElementById('p-category').value.trim(),
+    badge: document.getElementById('p-badge').value.trim(),
+    emoji: document.getElementById('p-emoji').value.trim(),
+    descShort: document.getElementById('p-descShort').value.trim(),
+    descFull: document.getElementById('p-descFull').value.trim(),
+    price: parseFloat(document.getElementById('p-price').value)||0,
+    priceOld: parseFloat(document.getElementById('p-priceOld').value)||0,
+    pricePix: parseFloat(document.getElementById('p-pricePix').value)||0,
+    rating: parseFloat(document.getElementById('p-rating').value)||5,
+    reviews: parseInt(document.getElementById('p-reviews').value)||0,
+    image: document.getElementById('p-image').value.trim(),
+    flavors: document.getElementById('p-flavors').value.trim(),
+  };
+  if (!p.name) { showToast('❌ Nome obrigatório!'); return; }
+  if (id) {
+    const idx = products.findIndex(x => x.id === parseInt(id));
+    if (idx >= 0) products[idx] = p;
+  } else products.push(p);
+  localStorage.setItem('alphaProducts', JSON.stringify(products));
+  closeProductModal();
+  renderProductsTable();
+  showToast(id ? '✅ Produto atualizado!' : '✅ Produto criado!');
+}
+function deleteProduct(id) {
+  if (!confirm('Excluir este produto?')) return;
+  products = products.filter(p => p.id !== id);
+  localStorage.setItem('alphaProducts', JSON.stringify(products));
+  renderProductsTable();
+  showToast('🗑 Produto excluído.');
+}
+
+// ============================================================
+// SHEETS
+// ============================================================
+async function importSheets() {
+  const url = document.getElementById('sheetsUrl').value.trim();
+  const mode = document.getElementById('sheetsMode').value;
+  const msg = document.getElementById('sheetsMsg');
+  if (!url) { msg.style.color='var(--primary)'; msg.textContent='❌ Informe a URL da planilha.'; return; }
+  msg.style.color='var(--muted)'; msg.textContent='⏳ Importando...';
+  try {
+    const r = await fetch(url);
+    const text = await r.text();
+    const rows = text.trim().split('\n');
+    const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+    const imported = rows.slice(1).map(row => {
+      const cols = parseCSVRow(row);
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = (cols[i]||'').replace(/^"|"$/g,'').trim());
+      return {
+        id: Date.now() + Math.random(),
+        name: obj.nome || '',
+        category: obj.categoria || '',
+        descShort: obj.descricao || '',
+        descFull: obj.descricaocompleta || obj.descricaoCompleta || '',
+        price: parseFloat(obj.preco)||0,
+        priceOld: parseFloat(obj.precoantigo||obj.precoAntigo)||0,
+        pricePix: parseFloat(obj.precopix||obj.precoPix)||0,
+        flavors: obj.sabores||'',
+        image: obj.imagem||'',
+        emoji: obj.emoji||'📦',
+        badge: obj.badge||'',
+        rating: 5, reviews: 0,
+      };
+    }).filter(p => p.name);
+    if (mode === 'replace') products = imported;
+    else products = [...products, ...imported];
+    localStorage.setItem('alphaProducts', JSON.stringify(products));
+    renderProductsTable();
+    msg.style.color='var(--success)'; msg.textContent=`✅ ${imported.length} produto(s) importado(s) com sucesso!`;
+  } catch(e) {
+    msg.style.color='var(--primary)'; msg.textContent='❌ Erro ao importar. Verifique a URL e se a planilha está publicada como CSV.';
+  }
+}
+function parseCSVRow(row) {
+  const result = []; let inQuotes = false; let current = '';
+  for (let i=0;i<row.length;i++) {
+    const c = row[i];
+    if (c==='"') inQuotes = !inQuotes;
+    else if (c===',' && !inQuotes) { result.push(current); current=''; }
+    else current += c;
+  }
+  result.push(current);
+  return result;
+}
+function downloadCSVTemplate() {
+  const headers = 'nome,categoria,descricao,descricaoCompleta,preco,precoAntigo,precoPix,sabores,imagem,emoji,badge';
+  const example = 'Whey Protein 1kg,Proteínas,Descrição curta,Descrição completa,89.90,129.90,85.40,"Chocolate,Baunilha",https://...,🥛,Mais Vendido';
+  const blob = new Blob([headers+'\n'+example], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'alpha-produtos-modelo.csv';
+  a.click();
+}
+
+// ============================================================
+// UPSELLS
+// ============================================================
+function renderUpsells() {
+  const container = document.getElementById('upsellsList');
+  const noEl = document.getElementById('noUpsells');
+  if (!upsells.length) { container.innerHTML=''; noEl.style.display='block'; return; }
+  noEl.style.display='none';
+  container.innerHTML = upsells.map((u,i) => `
+    <div class="card" style="padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:36px;">${u.emoji||'🎁'}</div>
+      <div style="flex:1;"><div style="font-weight:700;font-size:15px;">${u.name}</div><div style="color:var(--muted);font-size:13px;">${u.desc||''}</div></div>
+      <div style="font-size:18px;font-weight:800;color:var(--secondary);">R$ ${fmt(u.price)}</div>
+      <button class="btn btn-secondary btn-sm" onclick="editUpsell(${i})">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteUpsell(${i})">🗑</button>
+    </div>
+  `).join('');
+  // Populate upsell config
+  const dur = document.getElementById('cfg-upsellDuration');
+  if (dur) dur.value = config.upsellDuration || 10;
+  const timer = document.getElementById('cfg-upsellTimer');
+  if (timer) timer.checked = config.upsellTimer !== false;
+}
+function saveUpsellConfig() {
+  config.upsellDuration = document.getElementById('cfg-upsellDuration').value;
+  config.upsellTimer = document.getElementById('cfg-upsellTimer').checked;
+  localStorage.setItem('alphaConfig', JSON.stringify(config));
+  showToast('✅ Config de upsell salva!');
+}
+function openUpsellModal(idx) {
+  document.getElementById('editUpsellId').value = idx !== undefined ? idx : -1;
+  if (idx !== undefined && upsells[idx]) {
+    const u = upsells[idx];
+    document.getElementById('u-emoji').value = u.emoji||'';
+    document.getElementById('u-name').value = u.name||'';
+    document.getElementById('u-desc').value = u.desc||'';
+    document.getElementById('u-price').value = u.price||'';
+  } else {
+    ['u-emoji','u-name','u-desc','u-price'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }
+  document.getElementById('upsellModalOverlay').classList.add('show');
+}
+function editUpsell(idx) { openUpsellModal(idx); }
+function closeUpsellModal(e) {
+  if (!e || e.target === document.getElementById('upsellModalOverlay'))
+    document.getElementById('upsellModalOverlay').classList.remove('show');
+}
+function saveUpsell() {
+  const idx = parseInt(document.getElementById('editUpsellId').value);
+  const u = {
+    emoji: document.getElementById('u-emoji').value.trim(),
+    name: document.getElementById('u-name').value.trim(),
+    desc: document.getElementById('u-desc').value.trim(),
+    price: parseFloat(document.getElementById('u-price').value)||0,
+  };
+  if (!u.name) { showToast('❌ Nome obrigatório!'); return; }
+  if (idx >= 0) upsells[idx] = u;
+  else upsells.push(u);
+  localStorage.setItem('alphaUpsells', JSON.stringify(upsells));
+  closeUpsellModal();
+  renderUpsells();
+  showToast('✅ Upsell salvo!');
+}
+function deleteUpsell(idx) {
+  if (!confirm('Excluir este upsell?')) return;
+  upsells.splice(idx, 1);
+  localStorage.setItem('alphaUpsells', JSON.stringify(upsells));
+  renderUpsells();
+  showToast('🗑 Upsell excluído.');
+}
+
+// ============================================================
+// COUPONS
+// ============================================================
+function updateCouponStats() {
+  const now = new Date();
+  const active = coupons.filter(c => (!c.expiry || new Date(c.expiry) >= now) && (!c.maxUses || c.uses < c.maxUses));
+  const expired = coupons.filter(c => c.expiry && new Date(c.expiry) < now);
+  const totalUses = coupons.reduce((s,c) => s+(c.uses||0), 0);
+  const totalSales = coupons.reduce((s,c) => s+(c.totalSales||0), 0);
+  document.getElementById('couponStats').innerHTML = `
+    <div class="stat-card"><div class="num">${coupons.length}</div><div class="lbl">Total de Cupons</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--success)">${active.length}</div><div class="lbl">Cupons Ativos</div></div>
+    <div class="stat-card"><div class="num">${totalUses}</div><div class="lbl">Usos Totais</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--secondary)">R$ ${fmt(totalSales)}</div><div class="lbl">Vendas com Cupom</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--primary)">${expired.length}</div><div class="lbl">Expirados/Esgotados</div></div>
+  `;
+}
+function renderCoupons() {
+  updateCouponStats();
+  const tbody = document.getElementById('couponsTable');
+  const now = new Date();
+  if (!coupons.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Nenhum cupom cadastrado.</td></tr>'; return; }
+  tbody.innerHTML = coupons.map((c,i) => {
+    const expired = c.expiry && new Date(c.expiry) < now;
+    const exhausted = c.maxUses && c.uses >= c.maxUses;
+    const status = expired ? `<span class="badge badge-expired">⏰ Expirado</span>` : exhausted ? `<span class="badge badge-empty">🔒 Esgotado</span>` : `<span class="badge badge-active">✅ Ativo</span>`;
+    const typeLabel = c.type==='percent'?`${c.value}%`:c.type==='fixed'?`R$ ${fmt(c.value)}`:'Frete Grátis';
+    const usePct = c.maxUses ? Math.min(100, (c.uses/c.maxUses)*100) : 0;
+    return `
+      <tr>
+        <td style="font-family:monospace;font-weight:700;">${c.code}</td>
+        <td>${c.type==='percent'?'%':c.type==='fixed'?'R$':'Frete'}</td>
+        <td>${typeLabel}</td>
+        <td>${status}</td>
+        <td>${c.expiry||'Sem validade'}</td>
+        <td>
+          ${c.uses||0}/${c.maxUses||'∞'}
+          ${c.maxUses?`<div style="height:4px;background:#eee;border-radius:2px;margin-top:4px;width:80px;"><div style="height:100%;width:${usePct}%;background:var(--success);border-radius:2px;"></div></div>`:''}
+        </td>
+        <td>R$ ${fmt(c.totalSales)}</td>
+        <td>R$ ${fmt(c.totalDiscount)}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="resetCoupon(${i})" title="Zerar métricas">🔄</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCoupon(${i})" style="margin-left:4px;">🗑</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+function openCouponModal() {
+  ['c-code','c-value','c-desc','c-expiry','c-maxUses'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('c-type').value = 'percent';
+  toggleCouponValue();
+  document.getElementById('couponModalOverlay').classList.add('show');
+}
+function closeCouponModal(e) {
+  if (!e || e.target === document.getElementById('couponModalOverlay'))
+    document.getElementById('couponModalOverlay').classList.remove('show');
+}
+function toggleCouponValue() {
+  const type = document.getElementById('c-type').value;
+  const grp = document.getElementById('couponValueGroup');
+  const lbl = document.getElementById('couponValueLabel');
+  if (type==='shipping') grp.style.display='none';
+  else { grp.style.display='block'; lbl.textContent = type==='percent'?'Valor (%)':'Valor (R$)'; }
+}
+function saveCoupon() {
+  const code = document.getElementById('c-code').value.trim().toUpperCase();
+  if (!code) { showToast('❌ Código obrigatório!'); return; }
+  if (coupons.find(c => c.code === code)) { showToast('❌ Cupom já existe!'); return; }
+  const type = document.getElementById('c-type').value;
+  coupons.push({
+    code, type,
+    value: parseFloat(document.getElementById('c-value').value)||0,
+    desc: document.getElementById('c-desc').value.trim(),
+    expiry: document.getElementById('c-expiry').value,
+    maxUses: parseInt(document.getElementById('c-maxUses').value)||0,
+    uses: 0, totalSales: 0, totalDiscount: 0,
+  });
+  localStorage.setItem('alphaCoupons', JSON.stringify(coupons));
+  closeCouponModal();
+  renderCoupons();
+  showToast('✅ Cupom criado!');
+}
+function resetCoupon(i) {
+  if (!confirm('Zerar métricas deste cupom?')) return;
+  coupons[i].uses = 0; coupons[i].totalSales = 0; coupons[i].totalDiscount = 0;
+  localStorage.setItem('alphaCoupons', JSON.stringify(coupons));
+  renderCoupons();
+  showToast('🔄 Métricas zeradas.');
+}
+function deleteCoupon(i) {
+  if (!confirm('Excluir este cupom?')) return;
+  coupons.splice(i, 1);
+  localStorage.setItem('alphaCoupons', JSON.stringify(coupons));
+  renderCoupons();
+  showToast('🗑 Cupom excluído.');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmt(n) { return parseFloat(n||0).toFixed(2).replace('.',','); }
+function showToast(msg) {
+  const t = document.getElementById('adminToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// GITHUB SYNC
+// ============================================================
+const GH_USER   = 'vitrinealphasuplementos';
+const GH_REPO   = 'vitrinealphasuplementos.github.io';
+const GH_FILE   = 'produtos.json';
+const GH_BRANCH = 'main';
+
+function checkGhStatus() {
+  const tok = localStorage.getItem('gh_token');
+  const el  = document.getElementById('ghStatus');
+  const txt = document.getElementById('ghStatusTxt');
+  if (!el) return;
+  if (tok) {
+    el.className  = 'gh-status connected';
+    txt.textContent = '✅ GitHub OK';
+  } else {
+    el.className  = 'gh-status disconnected';
+    txt.textContent = 'Sem GitHub';
+  }
+}
+
+function openTokenModal() {
+  document.getElementById('ghTokenInput').value = '';
+  document.getElementById('tokenModal').classList.remove('hidden');
+}
+
+function saveToken() {
+  const t = document.getElementById('ghTokenInput').value.trim();
+  if (!t || (!t.startsWith('ghp_') && !t.startsWith('github_pat_'))) {
+    showToast('❌ Token inválido! Deve começar com ghp_ ou github_pat_');
+    return;
+  }
+  localStorage.setItem('gh_token', t);
+  document.getElementById('tokenModal').classList.add('hidden');
+  checkGhStatus();
+  showToast('✅ GitHub conectado!');
+}
+
+function skipToken() {
+  document.getElementById('tokenModal').classList.add('hidden');
+  showToast('Modo local — produtos salvos só neste navegador.');
+}
+
+async function syncGitHub() {
+  const tok = localStorage.getItem('gh_token');
+  if (!tok) {
+    openTokenModal();
+    return;
+  }
+
+  showToast('⏳ Sincronizando com GitHub...');
+
+  try {
+    // 1. Buscar SHA atual
+    const getRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+    );
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    }
+
+    // 2. Montar conteúdo
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+    const body = {
+      message: `Admin: atualiza produtos — ${new Date().toLocaleString('pt-BR')}`,
+      content,
+      branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    // 3. Commit
+    const putRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${tok}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (putRes.ok) {
+      showToast('✅ produtos.json salvo no GitHub!');
+    } else {
+      const err = await putRes.json();
+      if (putRes.status === 401) {
+        showToast('❌ Token inválido ou expirado. Atualize o token.');
+        openTokenModal();
+      } else {
+        showToast('❌ Erro: ' + (err.message || putRes.status));
+      }
+    }
+  } catch (e) {
+    showToast('❌ Erro de rede: ' + e.message);
+  }
+}
+
+// Init GitHub status on load
+document.addEventListener('DOMContentLoaded', () => { checkGhStatus(); });
+</script>
+</body>
+</html>
