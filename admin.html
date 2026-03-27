@@ -278,6 +278,100 @@
     .main { margin-left:0; }
     .form-row { grid-template-columns:1fr; }
   }
+
+  /* ── GITHUB SYNC ── */
+  .gh-status {
+    margin: 8px 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .gh-status:hover { opacity: .85; }
+  .gh-status.connected { background: rgba(46,196,182,.15); color: #2ec4b6; border: 1px solid rgba(46,196,182,.25); }
+  .gh-status.disconnected { background: rgba(230,57,70,.12); color: #e63946; border: 1px solid rgba(230,57,70,.2); }
+  .gh-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .connected .gh-dot { background: #2ec4b6; }
+  .disconnected .gh-dot { background: #e63946; }
+  .btn-gh-sync {
+    display: block;
+    margin: 4px 12px 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+    width: calc(100% - 24px);
+  }
+  .btn-gh-sync:hover { background: #c62a35; }
+
+  /* TOKEN MODAL */
+  #tokenModal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.65);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; padding: 16px;
+  }
+  #tokenModal.hidden { display: none; }
+  .token-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%; max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  .token-box h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .token-box p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+  .token-box input[type=password] {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'Barlow', sans-serif;
+    font-size: 14px; outline: none; margin-bottom: 12px;
+  }
+  .token-box input[type=password]:focus { border-color: var(--primary); }
+  .token-box .btn-primary { width: 100%; justify-content: center; }
+  .token-hint {
+    margin-top: 14px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .token-hint code {
+    background: #ffe8e8;
+    color: var(--primary);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .token-skip {
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .token-skip:hover { color: var(--primary); }
 </style>
 </head>
 <body>
@@ -285,6 +379,10 @@
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo"><span>⚡</span>ALPHA ADMIN</div>
+  <div id="ghStatus" class="gh-status disconnected" onclick="openTokenModal()" title="Clique para configurar o token GitHub">
+    <div class="gh-dot"></div><span id="ghStatusTxt">Sem GitHub</span>
+  </div>
+  <button class="btn-gh-sync" onclick="syncGitHub()">☁️ Salvar no GitHub</button>
   <div class="sidebar-nav">
     <div class="nav-item active" onclick="showPage('store')"><span class="icon">🏪</span>Loja</div>
     <div class="nav-item" onclick="showPage('banner')"><span class="icon">🖼️</span>Banner</div>
@@ -677,6 +775,26 @@
       <button class="btn btn-secondary" onclick="closeCouponModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveCoupon()">💾 Criar Cupom</button>
     </div>
+  </div>
+</div>
+
+<!-- TOKEN MODAL -->
+<div id="tokenModal" class="hidden">
+  <div class="token-box">
+    <h2>🔑 GitHub Token</h2>
+    <p>Para salvar produtos diretamente no repositório, informe seu Personal Access Token.<br>
+    Fica salvo <strong>só no seu navegador</strong> — nunca fica no código.</p>
+    <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    <button class="btn btn-primary" onclick="saveToken()">Conectar ao GitHub</button>
+    <div class="token-hint">
+      <strong>Como gerar:</strong><br>
+      1. <code>github.com → Settings → Developer settings</code><br>
+      2. <code>Personal access tokens → Tokens (classic)</code><br>
+      3. <code>Generate new token (classic)</code><br>
+      4. Marque o escopo <code>repo</code> → clique <strong>Generate</strong><br>
+      5. Cole o token acima ✅
+    </div>
+    <span class="token-skip" onclick="skipToken()">Usar sem GitHub (modo local)</span>
   </div>
 </div>
 
@@ -1200,6 +1318,113 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// ============================================================
+// GITHUB SYNC
+// ============================================================
+const GH_USER   = 'vitrinealphasuplementos';
+const GH_REPO   = 'vitrinealphasuplementos.github.io';
+const GH_FILE   = 'produtos.json';
+const GH_BRANCH = 'main';
+
+function checkGhStatus() {
+  const tok = localStorage.getItem('gh_token');
+  const el  = document.getElementById('ghStatus');
+  const txt = document.getElementById('ghStatusTxt');
+  if (!el) return;
+  if (tok) {
+    el.className  = 'gh-status connected';
+    txt.textContent = '✅ GitHub OK';
+  } else {
+    el.className  = 'gh-status disconnected';
+    txt.textContent = 'Sem GitHub';
+  }
+}
+
+function openTokenModal() {
+  document.getElementById('ghTokenInput').value = '';
+  document.getElementById('tokenModal').classList.remove('hidden');
+}
+
+function saveToken() {
+  const t = document.getElementById('ghTokenInput').value.trim();
+  if (!t || (!t.startsWith('ghp_') && !t.startsWith('github_pat_'))) {
+    showToast('❌ Token inválido! Deve começar com ghp_ ou github_pat_');
+    return;
+  }
+  localStorage.setItem('gh_token', t);
+  document.getElementById('tokenModal').classList.add('hidden');
+  checkGhStatus();
+  showToast('✅ GitHub conectado!');
+}
+
+function skipToken() {
+  document.getElementById('tokenModal').classList.add('hidden');
+  showToast('Modo local — produtos salvos só neste navegador.');
+}
+
+async function syncGitHub() {
+  const tok = localStorage.getItem('gh_token');
+  if (!tok) {
+    openTokenModal();
+    return;
+  }
+
+  showToast('⏳ Sincronizando com GitHub...');
+
+  try {
+    // 1. Buscar SHA atual
+    const getRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+    );
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    }
+
+    // 2. Montar conteúdo
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+    const body = {
+      message: `Admin: atualiza produtos — ${new Date().toLocaleString('pt-BR')}`,
+      content,
+      branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    // 3. Commit
+    const putRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${tok}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (putRes.ok) {
+      showToast('✅ produtos.json salvo no GitHub!');
+    } else {
+      const err = await putRes.json();
+      if (putRes.status === 401) {
+        showToast('❌ Token inválido ou expirado. Atualize o token.');
+        openTokenModal();
+      } else {
+        showToast('❌ Erro: ' + (err.message || putRes.status));
+      }
+    }
+  } catch (e) {
+    showToast('❌ Erro de rede: ' + e.message);
+  }
+}
+
+// Init GitHub status on load
+document.addEventListener('DOMContentLoaded', () => { checkGhStatus(); });
 </script>
 </body>
 </html>

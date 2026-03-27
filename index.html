@@ -1225,7 +1225,7 @@ let upsellAdded = [];
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  loadConfig();
+  await loadConfig();
   await loadProducts();
   loadCart();
   renderCategories();
@@ -1237,8 +1237,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTimeout(showPopup, 1800);
 });
 
-function loadConfig() {
+async function loadConfig() {
+  // Tentar buscar config.json do GitHub primeiro
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/vitrinealphasuplementos/vitrinealphasuplementos.github.io/main/config.json?t=' + Date.now());
+    if (res.ok) {
+      const data = await res.json();
+      config = data;
+      return;
+    }
+  } catch(e) {}
+  // Fallback: localStorage (admin local)
   try { config = JSON.parse(localStorage.getItem('alphaConfig') || '{}'); } catch(e) { config = {}; }
+  // Garantias mínimas
+  if (!config.whatsapp) config.whatsapp = '5588994427635';
+  if (!config.freeShipping) config.freeShipping = 400;
+  if (!config.storeName) config.storeName = 'Alpha Suplementos';
 }
 async function loadProducts() {
   const URL_JSON = 'https://raw.githubusercontent.com/vitrinealphasuplementos/vitrinealphasuplementos.github.io/main/produtos.json?t=' + Date.now();
@@ -1844,13 +1858,12 @@ function finalizeOrder() {
   if (couponDiscount > 0) msg += `\nDesconto (${appliedCoupon.code}): — R$ ${fmt(couponDiscount)}`;
   if (pixDiscount > 0) msg += `\nDesconto PIX (5%): — R$ ${fmt(pixDiscount)}`;
   msg += `\n*TOTAL: R$ ${fmt(total)}*\n\nForma de pagamento: ${selectedPayment||'A definir'}`;
-  const wpp = (config.whatsapp||'').replace(/\D/g,'');
-  if (!wpp) { showToast('❌ WhatsApp da loja não configurado!'); return; }
+  const wpp = (config.whatsapp||'').replace(/\D/g,'') || '5588994427635';
   window.open(`https://wa.me/${wpp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 function openWhatsApp() {
-  const wpp = (config.whatsapp||'').replace(/\D/g,'');
-  if (wpp) window.open(`https://wa.me/${wpp}`, '_blank');
+  const wpp = (config.whatsapp||'').replace(/\D/g,'') || '5588994427635';
+  window.open(`https://wa.me/${wpp}`, '_blank');
 }
 
 // POPUP
