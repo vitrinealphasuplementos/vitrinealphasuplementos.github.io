@@ -454,18 +454,43 @@
   <!-- PAGE: BANNER -->
   <div class="section-page" id="page-banner">
     <div class="page-header">
-      <div class="page-title">🖼️ Banner <span>Hero</span></div>
-      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
+      <div class="page-title">🖼️ Carrossel <span>de Banners</span></div>
+      <button class="btn btn-primary" onclick="saveBanners()">💾 Salvar Banners</button>
     </div>
-    <div class="card">
-      <div class="card-title">🎨 Conteúdo do Banner</div>
-      <div class="form-group"><label>URL da Imagem de Fundo</label><input type="url" id="cfg-heroBg" placeholder="https://..."></div>
-      <div class="form-group"><label>Etiqueta / Tag</label><input type="text" id="cfg-heroTag" placeholder="Loja Oficial"></div>
-      <div class="form-group"><label>Título Principal (suporta HTML)</label><input type="text" id="cfg-heroTitle" placeholder='ALPHA <span style="color:var(--primary)">SUPLEMENTOS</span>'></div>
-      <div class="form-group"><label>Subtítulo</label><input type="text" id="cfg-heroSubtitle" placeholder="Qualidade e performance..."></div>
+
+    <div class="card" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;border:none;">
+      <div class="card-title" style="color:var(--secondary);">📐 Especificações de Imagem</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:8px;">
+        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📏</div>
+          <div style="font-size:20px;font-weight:800;color:var(--secondary);">1920 × 600 px</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Tamanho ideal (desktop)</div>
+        </div>
+        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📱</div>
+          <div style="font-size:20px;font-weight:800;color:var(--secondary);">800 × 600 px</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Mínimo aceito (mobile)</div>
+        </div>
+        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">⚖️</div>
+          <div style="font-size:20px;font-weight:800;color:var(--secondary);">Até 500 KB</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Tamanho máximo do arquivo</div>
+        </div>
+        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
+          <div style="font-size:20px;font-weight:800;color:var(--secondary);">JPG ou PNG</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Formatos aceitos</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(230,57,70,.15);border-radius:8px;font-size:13px;border-left:3px solid var(--primary);">
+        💡 <strong>Dica:</strong> Use o <a href="https://imgbb.com" target="_blank" style="color:var(--secondary);">imgbb.com</a> para hospedar suas imagens. Cole a URL do <strong>Direct Link</strong> nos campos abaixo. Uma camada escura é aplicada automaticamente para o texto ficar legível.
+      </div>
     </div>
+
+    <div id="bannerSlidesContainer"></div>
+
     <div class="card">
-      <div class="card-title">📊 Estatísticas (3 números)</div>
+      <div class="card-title">📊 Estatísticas (aparecem no Banner 1)</div>
       <div id="heroStatsFields"></div>
       <button class="btn btn-secondary btn-sm" onclick="addHeroStat()">+ Adicionar Estatística</button>
     </div>
@@ -722,15 +747,7 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Nº de Avaliações</label><input type="number" id="p-reviews" placeholder="248"></div>
-      <div class="form-group">
-        <label>URL da Imagem</label>
-        <input type="url" id="p-image" placeholder="https://i.ibb.co/..." oninput="previewProductImage()">
-        <p class="form-hint" style="margin-top:4px;">⚠️ Use URL pública do <a href="https://imgbb.com" target="_blank" style="color:var(--primary)">imgbb.com</a> — arquivo local não funciona na loja.</p>
-        <div id="p-image-preview" style="margin-top:8px;display:none;">
-          <img id="p-image-preview-img" src="" alt="Preview" style="max-height:100px;max-width:100%;border-radius:8px;border:2px solid var(--border);object-fit:contain;">
-          <span id="p-image-status" style="display:block;font-size:12px;margin-top:4px;"></span>
-        </div>
-      </div>
+      <div class="form-group"><label>URL da Imagem</label><input type="url" id="p-image" placeholder="https://..."></div>
     </div>
     <div class="form-group"><label>Sabores / Variações (separados por vírgula)</label><input type="text" id="p-flavors" placeholder="Chocolate, Baunilha, Morango"></div>
     <div class="modal-footer">
@@ -861,6 +878,100 @@ function showPage(id) {
   if (idx >= 0) navItems[idx].classList.add('active');
 }
 
+
+// ============================================================
+// CAROUSEL BANNERS — 4 slides
+// ============================================================
+const BANNER_DEFAULTS = [
+  { tag:'Loja Oficial',   title:'ALPHA <span>SUPLEMENTOS</span>', subtitle:'Qualidade e performance para quem não aceita menos que o melhor.', btn:'VER PRODUTOS ↓', bg:'' },
+  { tag:'Ofertas Especiais', title:'MELHORES <span>OFERTAS</span>',  subtitle:'Preços imperdíveis em whey, creatina e pré-treino.', btn:'VER OFERTAS ↓', bg:'' },
+  { tag:'Frete Grátis',   title:'FRETE <span>GRÁTIS</span>',       subtitle:'Em compras acima de R$ 400. Aproveite agora!', btn:'COMPRAR AGORA ↓', bg:'' },
+  { tag:'Novidades',      title:'NOVOS <span>PRODUTOS</span>',      subtitle:'Confira os lançamentos que chegaram para o seu treino.', btn:'VER LANÇAMENTOS ↓', bg:'' },
+];
+
+function renderBannerSlides() {
+  const banners = config.banners || BANNER_DEFAULTS;
+  const container = document.getElementById('bannerSlidesContainer');
+  if (!container) return;
+  container.innerHTML = banners.map((b, i) => `
+    <div class="card" style="border-left:4px solid var(--primary);">
+      <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+        <span style="background:var(--primary);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">${i+1}</span>
+        Banner ${i+1}${i===0?' (Principal)':''}
+        <span style="font-size:12px;color:var(--muted);font-weight:400;margin-left:auto;">slide ${i+1} de 4 — troca automática a cada 5s</span>
+      </div>
+
+      <div class="form-group">
+        <label>🖼️ URL da Imagem de Fundo
+          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px;">Recomendado: 1920×600 px · máx 500 KB · JPG ou PNG · hospede no imgbb.com</span>
+        </label>
+        <input type="url" id="banner-bg-${i}" value="${b.bg||''}" placeholder="https://i.ibb.co/... (1920×600 px)" oninput="previewBannerImg(${i})">
+        <div id="banner-img-preview-${i}" style="margin-top:8px;display:${b.bg?'block':'none'};">
+          <img id="banner-img-${i}" src="${b.bg||''}" alt="Preview" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;border:2px solid var(--border);">
+          <span id="banner-img-status-${i}" style="display:block;font-size:12px;margin-top:4px;color:var(--success);">✅ Imagem carregada</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>🏷️ Etiqueta / Tag</label><input type="text" id="banner-tag-${i}" value="${b.tag||''}" placeholder="Loja Oficial"></div>
+        <div class="form-group"><label>🔘 Texto do Botão</label><input type="text" id="banner-btn-${i}" value="${b.btn||''}" placeholder="VER PRODUTOS ↓"></div>
+      </div>
+      <div class="form-group"><label>📝 Título <span style="font-size:11px;color:var(--muted);font-weight:400;">(suporta &lt;span&gt; para colorir)</span></label><input type="text" id="banner-title-${i}" value="${(b.title||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" placeholder='ALPHA &lt;span&gt;SUPLEMENTOS&lt;/span&gt;'></div>
+      <div class="form-group"><label>💬 Subtítulo</label><input type="text" id="banner-subtitle-${i}" value="${b.subtitle||''}" placeholder="Qualidade e performance..."></div>
+    </div>
+  `).join('');
+}
+
+function previewBannerImg(i) {
+  const url = (document.getElementById('banner-bg-'+i)?.value||'').trim();
+  const box = document.getElementById('banner-img-preview-'+i);
+  const img = document.getElementById('banner-img-'+i);
+  const st  = document.getElementById('banner-img-status-'+i);
+  if (!url) { box.style.display='none'; return; }
+  box.style.display='block';
+  if (!url.startsWith('http')) {
+    img.style.display='none';
+    st.style.color='var(--primary)';
+    st.textContent='❌ URL inválida! Use https://';
+    return;
+  }
+  img.style.display='block';
+  img.src = url;
+  st.style.color='var(--muted)';
+  st.textContent='⏳ Carregando imagem...';
+  img.onload  = () => { st.style.color='var(--success)'; st.textContent='✅ Imagem OK ('+img.naturalWidth+'×'+img.naturalHeight+'px) — aparecerá no carrossel!'; };
+  img.onerror = () => { st.style.color='var(--primary)'; st.textContent='❌ Não carregou. Verifique a URL.'; img.style.display='none'; };
+}
+
+function gatherBanners() {
+  const banners = [];
+  for (let i = 0; i < 4; i++) {
+    banners.push({
+      bg:       (document.getElementById('banner-bg-'+i)?.value||'').trim(),
+      tag:      document.getElementById('banner-tag-'+i)?.value||'',
+      title:    document.getElementById('banner-title-'+i)?.value||'',
+      subtitle: document.getElementById('banner-subtitle-'+i)?.value||'',
+      btn:      document.getElementById('banner-btn-'+i)?.value||'',
+    });
+  }
+  return banners;
+}
+
+function saveBanners() {
+  config.banners = gatherBanners();
+  // also gather hero stats
+  const stats = [];
+  document.querySelectorAll('.hero-stat-row').forEach(row => {
+    const num = row.querySelector('.hs-num')?.value;
+    const lbl = row.querySelector('.hs-lbl')?.value;
+    if (num || lbl) stats.push({ num, lbl });
+  });
+  if (stats.length) config.heroStats = stats;
+  localStorage.setItem('alphaConfig', JSON.stringify(config));
+  localStorage.setItem('alphaProducts', JSON.stringify(products));
+  showToast('✅ Banners salvos! Clique ☁️ Salvar no GitHub para publicar.');
+}
+
 // ============================================================
 // CONFIG
 // ============================================================
@@ -885,6 +996,8 @@ function populateConfigFields() {
   // Upsell timer
   const ut = document.getElementById('cfg-upsellTimer');
   if (ut) ut.checked = config.upsellTimer !== false;
+  // Banner slides
+  renderBannerSlides();
 }
 function setVal(id, val, type) {
   const el = document.getElementById(id);
@@ -918,6 +1031,9 @@ function gatherConfig() {
     if (num || lbl) stats.push({ num, lbl });
   });
   if (stats.length) config.heroStats = stats;
+  // Gather banners if on banner page
+  const bc = document.getElementById('bannerSlidesContainer');
+  if (bc && bc.children.length) config.banners = gatherBanners();
 }
 function saveConfig() {
   gatherConfig();
@@ -1031,7 +1147,6 @@ function openProductModal(id) {
     document.getElementById('p-rating').value = p.rating||'';
     document.getElementById('p-reviews').value = p.reviews||'';
     document.getElementById('p-image').value = p.image||'';
-    setTimeout(previewProductImage, 50);
     document.getElementById('p-flavors').value = p.flavors||'';
   }
   document.getElementById('productModalOverlay').classList.add('show');
@@ -1046,28 +1161,6 @@ function clearProductFields() {
   ['p-name','p-category','p-badge','p-emoji','p-descShort','p-descFull','p-price','p-priceOld','p-pricePix','p-rating','p-reviews','p-image','p-flavors'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value='';
   });
-  const previewBox = document.getElementById('p-image-preview');
-  if (previewBox) previewBox.style.display = 'none';
-}
-function previewProductImage() {
-  const url = (document.getElementById('p-image').value||'').trim();
-  const box = document.getElementById('p-image-preview');
-  const img = document.getElementById('p-image-preview-img');
-  const st  = document.getElementById('p-image-status');
-  if (!url) { box.style.display='none'; return; }
-  box.style.display='block';
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    img.style.display='none';
-    st.style.color='var(--primary)';
-    st.textContent='❌ URL inválida! Deve começar com https://';
-    return;
-  }
-  img.style.display='block';
-  img.src = url;
-  st.style.color='var(--muted)';
-  st.textContent='⏳ Carregando...';
-  img.onload  = () => { st.style.color='var(--success)'; st.textContent='✅ Imagem OK — vai aparecer na loja!'; };
-  img.onerror = () => { st.style.color='var(--primary)'; st.textContent='❌ Imagem não carregou. Verifique a URL.'; img.style.display='none'; };
 }
 function saveProduct() {
   const id = document.getElementById('editProductId').value;
@@ -1394,63 +1487,67 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
+async function ghCommitFile(tok, filename, content, message) {
+  // Buscar SHA atual
+  const getRes = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
+    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+  );
+  let sha = null;
+  if (getRes.ok) { sha = (await getRes.json()).sha; }
+
+  const body = { message, content, branch: GH_BRANCH };
+  if (sha) body.sha = sha;
+
+  const putRes = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!putRes.ok) {
+    const err = await putRes.json();
+    throw new Error(err.message || putRes.status);
+  }
+  return putRes;
+}
+
 async function syncGitHub() {
   const tok = localStorage.getItem('gh_token');
-  if (!tok) {
-    openTokenModal();
-    return;
-  }
+  if (!tok) { openTokenModal(); return; }
 
   showToast('⏳ Sincronizando com GitHub...');
 
   try {
-    // 1. Buscar SHA atual
-    const getRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
-      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-    );
-    let sha = null;
-    if (getRes.ok) {
-      const data = await getRes.json();
-      sha = data.sha;
-    }
+    const ts = new Date().toLocaleString('pt-BR');
 
-    // 2. Montar conteúdo
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
-    const body = {
-      message: `Admin: atualiza produtos — ${new Date().toLocaleString('pt-BR')}`,
-      content,
-      branch: GH_BRANCH,
-    };
-    if (sha) body.sha = sha;
-
-    // 3. Commit
-    const putRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${tok}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
+    // 1. Salvar produtos.json
+    await ghCommitFile(
+      tok,
+      'produtos.json',
+      btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2)))),
+      `Admin: atualiza produtos — ${ts}`
     );
 
-    if (putRes.ok) {
-      showToast('✅ produtos.json salvo no GitHub!');
-    } else {
-      const err = await putRes.json();
-      if (putRes.status === 401) {
-        showToast('❌ Token inválido ou expirado. Atualize o token.');
-        openTokenModal();
-      } else {
-        showToast('❌ Erro: ' + (err.message || putRes.status));
-      }
-    }
+    // 2. Salvar config.json (inclui banners, cores, etc.)
+    gatherConfig();
+    await ghCommitFile(
+      tok,
+      'config.json',
+      btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2)))),
+      `Admin: atualiza config — ${ts}`
+    );
+
+    showToast('✅ produtos.json e config.json salvos no GitHub!');
   } catch (e) {
-    showToast('❌ Erro de rede: ' + e.message);
+    if (e.message && e.message.includes('401')) {
+      showToast('❌ Token inválido ou expirado. Atualize o token.');
+      openTokenModal();
+    } else {
+      showToast('❌ Erro: ' + e.message);
+    }
   }
 }
 

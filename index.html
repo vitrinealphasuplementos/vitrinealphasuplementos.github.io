@@ -151,22 +151,101 @@
   }
 
   /* HERO BANNER */
+  /* BANNER CAROUSEL */
   .hero {
-    background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    color:#fff;
-    padding:70px 20px;
-    text-align:center;
     position:relative;
     overflow:hidden;
+    color:#fff;
   }
-  .hero::before {
+  .banner-carousel {
+    position:relative;
+    width:100%;
+    min-height:420px;
+  }
+  .banner-slide {
+    position:absolute;
+    inset:0;
+    background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:70px 20px;
+    opacity:0;
+    transition:opacity .8s ease-in-out;
+    pointer-events:none;
+  }
+  .banner-slide.active {
+    opacity:1;
+    pointer-events:all;
+    position:relative;
+  }
+  .banner-slide[data-bg] {
+    background-size:cover;
+    background-position:center;
+  }
+  .banner-slide::before {
     content:'';
     position:absolute;
     inset:0;
-    background:url('') center/cover no-repeat;
-    opacity:.15;
+    background:rgba(0,0,0,.45);
+    z-index:0;
   }
-  .hero-content { position:relative; z-index:1; max-width:700px; margin:0 auto; }
+  .hero-content { position:relative; z-index:1; max-width:780px; margin:0 auto; text-align:center; }
+
+  /* Hero logo inline */
+  .hero-logo-inline {
+    display:block;
+    height:90px;
+    width:auto;
+    margin:0 auto 12px;
+    filter:drop-shadow(0 0 16px rgba(230,57,70,.5));
+    mix-blend-mode:screen;
+    animation:logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%,100% { filter:drop-shadow(0 0 16px rgba(230,57,70,.5)); }
+    50%      { filter:drop-shadow(0 0 28px rgba(255,107,53,.8)); }
+  }
+
+  /* Carousel dots */
+  .banner-dots {
+    position:absolute;
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:8px;
+    z-index:10;
+  }
+  .banner-dot {
+    width:10px; height:10px;
+    border-radius:50%;
+    background:rgba(255,255,255,.4);
+    border:none;
+    cursor:pointer;
+    transition:all .3s;
+    padding:0;
+  }
+  .banner-dot.active { background:#fff; transform:scale(1.3); }
+
+  /* Carousel arrows */
+  .banner-arrow {
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    background:rgba(255,255,255,.15);
+    border:none;
+    color:#fff;
+    width:44px; height:44px;
+    border-radius:50%;
+    font-size:20px;
+    cursor:pointer;
+    z-index:10;
+    transition:background .2s;
+    backdrop-filter:blur(4px);
+  }
+  .banner-arrow:hover { background:rgba(230,57,70,.7); }
+  .banner-arrow.prev { left:16px; }
+  .banner-arrow.next { right:16px; }
   .hero-tag {
     display:inline-block;
     background:var(--primary);
@@ -969,18 +1048,77 @@
 <div id="storeSection">
   <!-- HERO -->
   <div class="hero" id="heroBanner">
-    <div class="hero-content">
-      <span class="hero-tag" id="heroTag">Loja Oficial</span>
-      <h1 id="heroTitle">ALPHA <span>SUPLEMENTOS</span></h1>
-      <p id="heroSubtitle">Qualidade e performance para quem não aceita menos que o melhor.</p>
-      <button class="hero-cta" onclick="document.querySelector('.main').scrollIntoView({behavior:'smooth'})">
-        VER PRODUTOS ↓
-      </button>
-      <div class="hero-stats" id="heroStats">
-        <div class="hero-stat"><div class="num">5000+</div><div class="lbl">Clientes Satisfeitos</div></div>
-        <div class="hero-stat"><div class="num">100%</div><div class="lbl">Produtos Originais</div></div>
-        <div class="hero-stat"><div class="num">24h</div><div class="lbl">Atendimento</div></div>
+    <div class="banner-carousel" id="bannerCarousel">
+
+      <!-- SLIDE 1 — padrão -->
+      <div class="banner-slide active" id="bannerSlide0">
+        <div class="hero-content">
+          <span class="hero-tag" id="heroTag">Loja Oficial</span>
+          <img src="" class="hero-logo-inline" alt="Alpha Suplementos">
+          <h1 id="heroTitle">ALPHA <span>SUPLEMENTOS</span></h1>
+          <p id="heroSubtitle">Qualidade e performance para quem não aceita menos que o melhor.</p>
+          <button class="hero-cta" onclick="document.querySelector('.main').scrollIntoView({behavior:'smooth'})">
+            VER PRODUTOS ↓
+          </button>
+          <div class="hero-stats" id="heroStats">
+            <div class="hero-stat"><div class="num">5000+</div><div class="lbl">Clientes Satisfeitos</div></div>
+            <div class="hero-stat"><div class="num">100%</div><div class="lbl">Produtos Originais</div></div>
+            <div class="hero-stat"><div class="num">24h</div><div class="lbl">Atendimento</div></div>
+          </div>
+        </div>
       </div>
+
+      <!-- SLIDE 2 — personalizável pelo admin -->
+      <div class="banner-slide" id="bannerSlide1">
+        <div class="hero-content">
+          <span class="hero-tag">Ofertas Especiais</span>
+          <img src="" class="hero-logo-inline" alt="Alpha Suplementos">
+          <h1>MELHORES <span>OFERTAS</span></h1>
+          <p>Preços imperdíveis em whey, creatina e pré-treino.</p>
+          <button class="hero-cta" onclick="document.querySelector('.main').scrollIntoView({behavior:'smooth'})">
+            VER OFERTAS ↓
+          </button>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 — personalizável pelo admin -->
+      <div class="banner-slide" id="bannerSlide2">
+        <div class="hero-content">
+          <span class="hero-tag">Frete Grátis</span>
+          <img src="" class="hero-logo-inline" alt="Alpha Suplementos">
+          <h1>FRETE <span>GRÁTIS</span></h1>
+          <p>Em compras acima de R$ 400. Aproveite agora!</p>
+          <button class="hero-cta" onclick="document.querySelector('.main').scrollIntoView({behavior:'smooth'})">
+            COMPRAR AGORA ↓
+          </button>
+        </div>
+      </div>
+
+      <!-- SLIDE 4 — personalizável pelo admin -->
+      <div class="banner-slide" id="bannerSlide3">
+        <div class="hero-content">
+          <span class="hero-tag">Novidades</span>
+          <img src="" class="hero-logo-inline" alt="Alpha Suplementos">
+          <h1>NOVOS <span>PRODUTOS</span></h1>
+          <p>Confira os lançamentos que chegaram para o seu treino.</p>
+          <button class="hero-cta" onclick="document.querySelector('.main').scrollIntoView({behavior:'smooth'})">
+            VER LANÇAMENTOS ↓
+          </button>
+        </div>
+      </div>
+
+      <!-- Arrows -->
+      <button class="banner-arrow prev" onclick="moveBanner(-1)">&#8249;</button>
+      <button class="banner-arrow next" onclick="moveBanner(1)">&#8250;</button>
+
+      <!-- Dots -->
+      <div class="banner-dots" id="bannerDots">
+        <button class="banner-dot active" onclick="goToBanner(0)"></button>
+        <button class="banner-dot" onclick="goToBanner(1)"></button>
+        <button class="banner-dot" onclick="goToBanner(2)"></button>
+        <button class="banner-dot" onclick="goToBanner(3)"></button>
+      </div>
+
     </div>
   </div>
 
@@ -1345,6 +1483,40 @@ function applyConfig() {
   // Free shipping threshold
   updateShippingBar();
   updateCheckoutShippingBar();
+  // Apply carousel banners from config
+  applyCarouselBanners();
+}
+function applyCarouselBanners() {
+  if (!config.banners || !Array.isArray(config.banners)) return;
+  const DEFAULTS = [
+    { tag:'Loja Oficial',    title:'ALPHA <span>SUPLEMENTOS</span>', subtitle:'Qualidade e performance para quem não aceita menos que o melhor.', btn:'VER PRODUTOS ↓' },
+    { tag:'Ofertas Especiais', title:'MELHORES <span>OFERTAS</span>', subtitle:'Preços imperdíveis em whey, creatina e pré-treino.', btn:'VER OFERTAS ↓' },
+    { tag:'Frete Grátis',    title:'FRETE <span>GRÁTIS</span>',      subtitle:'Em compras acima de R$ 400. Aproveite agora!', btn:'COMPRAR AGORA ↓' },
+    { tag:'Novidades',       title:'NOVOS <span>PRODUTOS</span>',     subtitle:'Confira os lançamentos que chegaram para o seu treino.', btn:'VER LANÇAMENTOS ↓' },
+  ];
+  config.banners.forEach((b, i) => {
+    const slide = document.getElementById('bannerSlide'+i);
+    if (!slide) return;
+    const def = DEFAULTS[i] || {};
+    // Background image
+    if (b.bg) {
+      slide.style.backgroundImage = `url('${b.bg}')`;
+      slide.style.backgroundSize = 'cover';
+      slide.style.backgroundPosition = 'center';
+    }
+    // Tag
+    const tagEl = slide.querySelector('.hero-tag');
+    if (tagEl && b.tag) tagEl.textContent = b.tag;
+    // Title
+    const titleEl = slide.querySelector('h1');
+    if (titleEl && b.title) titleEl.innerHTML = b.title;
+    // Subtitle
+    const subEl = slide.querySelector('p');
+    if (subEl && b.subtitle) subEl.textContent = b.subtitle;
+    // Button
+    const btnEl = slide.querySelector('.hero-cta');
+    if (btnEl && b.btn) btnEl.textContent = b.btn;
+  });
 }
 
 // ============================================================
@@ -1922,6 +2094,44 @@ function handlePopupCta() {
   if (pc?.btnAction === 'whatsapp') openWhatsApp();
   closePopup();
 }
+
+
+// ============================================================
+// BANNER CAROUSEL
+// ============================================================
+let bannerCurrent = 0;
+const bannerTotal = 4;
+let bannerInterval = null;
+
+function goToBanner(idx) {
+  const slides = document.querySelectorAll('.banner-slide');
+  const dots   = document.querySelectorAll('.banner-dot');
+  slides.forEach((s,i) => {
+    s.classList.toggle('active', i === idx);
+    s.style.position = i === idx ? 'relative' : 'absolute';
+  });
+  dots.forEach((d,i) => d.classList.toggle('active', i === idx));
+  bannerCurrent = idx;
+}
+function moveBanner(dir) {
+  let next = (bannerCurrent + dir + bannerTotal) % bannerTotal;
+  goToBanner(next);
+  resetBannerTimer();
+}
+function startBannerTimer() {
+  bannerInterval = setInterval(() => {
+    goToBanner((bannerCurrent + 1) % bannerTotal);
+  }, 5000);
+}
+function resetBannerTimer() {
+  clearInterval(bannerInterval);
+  startBannerTimer();
+}
+// Init carousel
+document.addEventListener('DOMContentLoaded', () => {
+  goToBanner(0);
+  startBannerTimer();
+});
 
 // UTILS
 function fmt(n) { return parseFloat(n||0).toFixed(2).replace('.',','); }
