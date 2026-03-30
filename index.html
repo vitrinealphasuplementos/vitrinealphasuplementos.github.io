@@ -278,14 +278,25 @@
   .card-img {
     background:linear-gradient(135deg, #f8f8f8, #efefef);
     height:200px;
+    min-height:200px;
+    max-height:200px;
     display:flex;
     align-items:center;
     justify-content:center;
     font-size:72px;
     position:relative;
     overflow:hidden;
+    flex-shrink:0;
   }
-  .card-img img { width:100%; height:100%; object-fit:cover; }
+  .card-img img {
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    object-position:center;
+    display:block;
+  }
   .card-badges {
     position:absolute;
     top:10px;

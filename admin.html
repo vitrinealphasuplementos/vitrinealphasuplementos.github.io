@@ -722,7 +722,15 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Nº de Avaliações</label><input type="number" id="p-reviews" placeholder="248"></div>
-      <div class="form-group"><label>URL da Imagem</label><input type="url" id="p-image" placeholder="https://..."></div>
+      <div class="form-group">
+        <label>URL da Imagem</label>
+        <input type="url" id="p-image" placeholder="https://i.ibb.co/..." oninput="previewProductImage()">
+        <p class="form-hint" style="margin-top:4px;">⚠️ Use URL pública do <a href="https://imgbb.com" target="_blank" style="color:var(--primary)">imgbb.com</a> — arquivo local não funciona na loja.</p>
+        <div id="p-image-preview" style="margin-top:8px;display:none;">
+          <img id="p-image-preview-img" src="" alt="Preview" style="max-height:100px;max-width:100%;border-radius:8px;border:2px solid var(--border);object-fit:contain;">
+          <span id="p-image-status" style="display:block;font-size:12px;margin-top:4px;"></span>
+        </div>
+      </div>
     </div>
     <div class="form-group"><label>Sabores / Variações (separados por vírgula)</label><input type="text" id="p-flavors" placeholder="Chocolate, Baunilha, Morango"></div>
     <div class="modal-footer">
@@ -1023,6 +1031,7 @@ function openProductModal(id) {
     document.getElementById('p-rating').value = p.rating||'';
     document.getElementById('p-reviews').value = p.reviews||'';
     document.getElementById('p-image').value = p.image||'';
+    setTimeout(previewProductImage, 50);
     document.getElementById('p-flavors').value = p.flavors||'';
   }
   document.getElementById('productModalOverlay').classList.add('show');
@@ -1037,6 +1046,28 @@ function clearProductFields() {
   ['p-name','p-category','p-badge','p-emoji','p-descShort','p-descFull','p-price','p-priceOld','p-pricePix','p-rating','p-reviews','p-image','p-flavors'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value='';
   });
+  const previewBox = document.getElementById('p-image-preview');
+  if (previewBox) previewBox.style.display = 'none';
+}
+function previewProductImage() {
+  const url = (document.getElementById('p-image').value||'').trim();
+  const box = document.getElementById('p-image-preview');
+  const img = document.getElementById('p-image-preview-img');
+  const st  = document.getElementById('p-image-status');
+  if (!url) { box.style.display='none'; return; }
+  box.style.display='block';
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    img.style.display='none';
+    st.style.color='var(--primary)';
+    st.textContent='❌ URL inválida! Deve começar com https://';
+    return;
+  }
+  img.style.display='block';
+  img.src = url;
+  st.style.color='var(--muted)';
+  st.textContent='⏳ Carregando...';
+  img.onload  = () => { st.style.color='var(--success)'; st.textContent='✅ Imagem OK — vai aparecer na loja!'; };
+  img.onerror = () => { st.style.color='var(--primary)'; st.textContent='❌ Imagem não carregou. Verifique a URL.'; img.style.display='none'; };
 }
 function saveProduct() {
   const id = document.getElementById('editProductId').value;
