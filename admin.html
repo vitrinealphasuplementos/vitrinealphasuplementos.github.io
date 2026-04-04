@@ -1025,6 +1025,14 @@ function gatherConfig() {
     if (num || lbl) stats.push({ num, lbl });
   });
   if (stats.length) config.heroStats = stats;
+  // Formas de pagamento
+  gatherPaymentMethods();
+  // Desconto PIX
+  const pdEl = document.getElementById('cfg-pixDiscount');
+  if (pdEl) config.pixDiscount = pdEl.checked;
+  // Retirada na loja
+  const puEl = document.getElementById('cfg-pickupEnabled');
+  if (puEl) config.pickupEnabled = puEl.checked;
 }
 function saveConfig() {
   gatherConfig();
@@ -1677,63 +1685,68 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
+async function ghCommitFile(tok, filename, jsonData, message) {
+  // Buscar SHA atual do arquivo
+  const getRes = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
+    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+  );
+  let sha = null;
+  if (getRes.ok) { sha = (await getRes.json()).sha; }
+
+  const body = {
+    message,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  const putRes = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${tok}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!putRes.ok) {
+    const err = await putRes.json();
+    throw new Error(err.message || `HTTP ${putRes.status}`);
+  }
+  return true;
+}
+
 async function syncGitHub() {
   const tok = localStorage.getItem('gh_token');
-  if (!tok) {
-    openTokenModal();
-    return;
-  }
+  if (!tok) { openTokenModal(); return; }
 
   showToast('⏳ Sincronizando com GitHub...');
 
   try {
-    // 1. Buscar SHA atual
-    const getRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
-      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-    );
-    let sha = null;
-    if (getRes.ok) {
-      const data = await getRes.json();
-      sha = data.sha;
-    }
+    const ts = new Date().toLocaleString('pt-BR');
 
-    // 2. Montar conteúdo
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
-    const body = {
-      message: `Admin: atualiza produtos — ${new Date().toLocaleString('pt-BR')}`,
-      content,
-      branch: GH_BRANCH,
-    };
-    if (sha) body.sha = sha;
+    // 1. Garante que config tem todos os campos atuais antes de salvar
+    gatherConfig();
 
-    // 3. Commit
-    const putRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${tok}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    // 2. Salva produtos.json
+    await ghCommitFile(tok, 'produtos.json', products, `Admin: produtos — ${ts}`);
 
-    if (putRes.ok) {
-      showToast('✅ produtos.json salvo no GitHub!');
+    // 3. Salva config.json (formas de pagamento, frete grátis, retirada, cores, etc.)
+    await ghCommitFile(tok, 'config.json', config, `Admin: config — ${ts}`);
+
+    showToast('✅ Tudo salvo! produtos.json + config.json → loja atualiza em ~2min');
+
+  } catch(e) {
+    if (e.message.includes('401') || e.message.includes('Bad credentials')) {
+      showToast('❌ Token inválido ou expirado. Clique no badge e atualize.');
+      openTokenModal();
     } else {
-      const err = await putRes.json();
-      if (putRes.status === 401) {
-        showToast('❌ Token inválido ou expirado. Atualize o token.');
-        openTokenModal();
-      } else {
-        showToast('❌ Erro: ' + (err.message || putRes.status));
-      }
+      showToast('❌ Erro: ' + e.message);
     }
-  } catch (e) {
-    showToast('❌ Erro de rede: ' + e.message);
   }
 }
 
