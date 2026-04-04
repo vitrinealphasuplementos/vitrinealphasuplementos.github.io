@@ -1715,39 +1715,51 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
-async function ghCommitFile(tok, filename, jsonData, message) {
-  // Buscar SHA atual do arquivo
-  const getRes = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
-    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-  );
-  let sha = null;
-  if (getRes.ok) { sha = (await getRes.json()).sha; }
-
-  const body = {
-    message,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
-    branch: GH_BRANCH,
-  };
-  if (sha) body.sha = sha;
-
-  const putRes = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${tok}`,
-        Accept: 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+async function ghCommitFile(tok, filename, jsonData, message, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    // Sempre busca o SHA mais recente antes de cada tentativa
+    const getRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}&t=${Date.now()}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' } }
+    );
+    let sha = null;
+    if (getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
     }
-  );
-  if (!putRes.ok) {
+
+    const body = {
+      message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
+      branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${tok}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (putRes.ok) return true; // Sucesso
+
     const err = await putRes.json();
+
+    if (putRes.status === 409 && attempt < retries) {
+      // Conflito de SHA — aguarda 1s e tenta novamente com SHA atualizado
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+      continue;
+    }
+
     throw new Error(err.message || `HTTP ${putRes.status}`);
   }
-  return true;
 }
 
 async function syncGitHub() {
