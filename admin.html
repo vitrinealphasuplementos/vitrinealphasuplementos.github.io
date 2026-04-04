@@ -899,21 +899,51 @@ let upsells = [];
 // ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  loadAll();
-  populateConfigFields();
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAll();          // Garante que config vem do GitHub
+  populateConfigFields();   // Preenche campos com dados reais
   renderProductsTable();
   renderCoupons();
   renderUpsells();
   renderHeroStats();
   previewPopup();
   updateCouponStats();
+  checkGhStatus();
 });
 
-function loadAll() {
-  try { config = JSON.parse(localStorage.getItem('alphaConfig')||'{}'); } catch(e) { config={}; }
-  try { products = JSON.parse(localStorage.getItem('alphaProducts')||'[]'); } catch(e) { products=[]; }
-  if (!products.length) products = getDefaultProducts();
+async function loadAll() {
+  // Tenta carregar config.json do GitHub (fonte de verdade)
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/config.json?t=` + Date.now()
+    );
+    if (res.ok) {
+      config = await res.json();
+      // Atualiza localStorage com o valor do GitHub
+      localStorage.setItem('alphaConfig', JSON.stringify(config));
+    } else { throw new Error('GitHub não disponível'); }
+  } catch(e) {
+    // Fallback: localStorage
+    try { config = JSON.parse(localStorage.getItem('alphaConfig')||'{}'); } catch(e2) { config={}; }
+  }
+
+  // Tenta carregar produtos do GitHub
+  try {
+    const res2 = await fetch(
+      `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/produtos.json?t=` + Date.now()
+    );
+    if (res2.ok) {
+      const data = await res2.json();
+      if (Array.isArray(data) && data.length) {
+        products = data;
+        localStorage.setItem('alphaProducts', JSON.stringify(products));
+      } else throw new Error('vazio');
+    } else throw new Error('GitHub não disponível');
+  } catch(e) {
+    try { products = JSON.parse(localStorage.getItem('alphaProducts')||'[]'); } catch(e2) { products=[]; }
+    if (!products.length) products = getDefaultProducts();
+  }
+
   try { coupons = JSON.parse(localStorage.getItem('alphaCoupons')||'[]'); } catch(e) { coupons=[]; }
   try { upsells = JSON.parse(localStorage.getItem('alphaUpsells')||'[]'); } catch(e) { upsells=[]; }
 }
@@ -1729,13 +1759,17 @@ async function syncGitHub() {
   try {
     const ts = new Date().toLocaleString('pt-BR');
 
-    // 1. Garante que config tem todos os campos atuais antes de salvar
+    // 1. Coleta TODOS os campos dos formulários para o objeto config
     gatherConfig();
 
-    // 2. Salva produtos.json
+    // 2. Persiste no localStorage também (para abertura offline)
+    localStorage.setItem('alphaConfig', JSON.stringify(config));
+    localStorage.setItem('alphaProducts', JSON.stringify(products));
+
+    // 3. Salva produtos.json no GitHub
     await ghCommitFile(tok, 'produtos.json', products, `Admin: produtos — ${ts}`);
 
-    // 3. Salva config.json (formas de pagamento, frete grátis, retirada, cores, etc.)
+    // 4. Salva config.json no GitHub (formas de pagamento, frete, retirada, cores, etc.)
     await ghCommitFile(tok, 'config.json', config, `Admin: config — ${ts}`);
 
     showToast('✅ Tudo salvo! produtos.json + config.json → loja atualiza em ~2min');
@@ -1750,8 +1784,7 @@ async function syncGitHub() {
   }
 }
 
-// Init GitHub status on load
-document.addEventListener('DOMContentLoaded', () => { checkGhStatus(); });
+// Init handled in main DOMContentLoaded above
 </script>
 </body>
 </html>
