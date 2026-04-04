@@ -1716,24 +1716,42 @@ function skipToken() {
 }
 
 async function ghGetSHA(tok, filename) {
-  const res = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
-    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-  );
-  if (!res.ok) return null; // arquivo não existe ainda
-  const data = await res.json();
-  return data.sha || null;
+  // Usa a API de refs/git para evitar qualquer cache do browser
+  // Busca a árvore do commit mais recente para pegar o SHA exato do blob
+  try {
+    // 1. Pega o SHA do último commit da branch
+    const refRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/git/refs/heads/${GH_BRANCH}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+    );
+    if (!refRes.ok) return null;
+    const refData = await refRes.json();
+    const commitSha = refData.object?.sha;
+    if (!commitSha) return null;
+
+    // 2. Pega a tree do commit
+    const treeRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/git/trees/${commitSha}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+    );
+    if (!treeRes.ok) return null;
+    const treeData = await treeRes.json();
+
+    // 3. Encontra o blob do arquivo na tree
+    const file = (treeData.tree || []).find(f => f.path === filename);
+    return file?.sha || null;
+  } catch(e) {
+    return null;
+  }
 }
 
 async function ghCommitFile(tok, filename, jsonData, message) {
-  // Busca o SHA imediatamente antes do PUT (sem cache entre chamadas)
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2))));
+
+  // Busca SHA fresco via git tree (nunca tem cache)
   const sha = await ghGetSHA(tok, filename);
 
-  const body = {
-    message,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
-    branch: GH_BRANCH,
-  };
+  const body = { message, content, branch: GH_BRANCH };
   if (sha) body.sha = sha;
 
   const putRes = await fetch(
@@ -1751,12 +1769,12 @@ async function ghCommitFile(tok, filename, jsonData, message) {
 
   if (putRes.ok) return true;
 
-  // Se 409: busca SHA novamente e tenta mais uma vez
+  // 409: SHA mudou entre o GET e o PUT — tenta uma vez mais
   if (putRes.status === 409) {
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
     const sha2 = await ghGetSHA(tok, filename);
-    const body2 = { ...body };
-    if (sha2) body2.sha = sha2; else delete body2.sha;
+    const body2 = { message, content, branch: GH_BRANCH };
+    if (sha2) body2.sha = sha2;
 
     const putRes2 = await fetch(
       `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
