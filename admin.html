@@ -1715,27 +1715,50 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
-async function ghCommitFile(tok, filename, jsonData, message, retries = 3) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    // Sempre busca o SHA mais recente antes de cada tentativa
-    const getRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
-      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-    );
-    let sha = null;
-    if (getRes.ok) {
-      const fileData = await getRes.json();
-      sha = fileData.sha;
+async function ghGetSHA(tok, filename) {
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
+    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
+  );
+  if (!res.ok) return null; // arquivo não existe ainda
+  const data = await res.json();
+  return data.sha || null;
+}
+
+async function ghCommitFile(tok, filename, jsonData, message) {
+  // Busca o SHA imediatamente antes do PUT (sem cache entre chamadas)
+  const sha = await ghGetSHA(tok, filename);
+
+  const body = {
+    message,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  const putRes = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${tok}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     }
+  );
 
-    const body = {
-      message,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2)))),
-      branch: GH_BRANCH,
-    };
-    if (sha) body.sha = sha;
+  if (putRes.ok) return true;
 
-    const putRes = await fetch(
+  // Se 409: busca SHA novamente e tenta mais uma vez
+  if (putRes.status === 409) {
+    await new Promise(r => setTimeout(r, 1500));
+    const sha2 = await ghGetSHA(tok, filename);
+    const body2 = { ...body };
+    if (sha2) body2.sha = sha2; else delete body2.sha;
+
+    const putRes2 = await fetch(
       `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
       {
         method: 'PUT',
@@ -1744,22 +1767,16 @@ async function ghCommitFile(tok, filename, jsonData, message, retries = 3) {
           Accept: 'application/vnd.github+json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body2),
       }
     );
-
-    if (putRes.ok) return true; // Sucesso
-
-    const err = await putRes.json();
-
-    if (putRes.status === 409 && attempt < retries) {
-      // Conflito de SHA — aguarda 1s e tenta novamente com SHA atualizado
-      await new Promise(r => setTimeout(r, 1000 * attempt));
-      continue;
-    }
-
-    throw new Error(err.message || `HTTP ${putRes.status}`);
+    if (putRes2.ok) return true;
+    const err2 = await putRes2.json();
+    throw new Error(err2.message || `HTTP ${putRes2.status}`);
   }
+
+  const err = await putRes.json();
+  throw new Error(err.message || `HTTP ${putRes.status}`);
 }
 
 async function syncGitHub() {
@@ -1780,6 +1797,9 @@ async function syncGitHub() {
 
     // 3. Salva produtos.json no GitHub
     await ghCommitFile(tok, 'produtos.json', products, `Admin: produtos — ${ts}`);
+
+    // Aguarda GitHub processar o primeiro commit antes do segundo
+    await new Promise(r => setTimeout(r, 2000));
 
     // 4. Salva config.json no GitHub (formas de pagamento, frete, retirada, cores, etc.)
     await ghCommitFile(tok, 'config.json', config, `Admin: config — ${ts}`);
