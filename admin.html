@@ -415,7 +415,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>WhatsApp (com DDD)</label><input type="text" id="cfg-whatsapp" placeholder="5588999999999"><p class="form-hint">Apenas números, incluindo código do país (55)</p></div>
-        <div class="form-group"><label>Valor para Frete Grátis (R$)</label><input type="number" id="cfg-freeShipping" placeholder="200" min="0"></div>
+        <div class="form-group"><label>🚚 Frete Grátis a partir de (R$)</label><input type="number" id="cfg-freeShipping" placeholder="400" min="0"><p class="form-hint">Ex: 400 = frete grátis em compras acima de R$ 400</p></div>
       </div>
     </div>
     <div class="card">
@@ -434,6 +434,63 @@
         </div>
       </div>
     </div>
+
+    <!-- PAGAMENTO & PARCELAMENTO -->
+    <div class="card">
+      <div class="card-title">💳 Formas de Pagamento</div>
+      <div class="form-group">
+        <label>Formas de Pagamento aceitas</label>
+        <p class="form-hint" style="margin-bottom:10px;">Marque as formas que você aceita. Elas aparecem no checkout da loja.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><input type="checkbox" id="pay-pix" value="PIX" onchange="gatherPaymentMethods()"> 🔷 PIX</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><input type="checkbox" id="pay-card" value="Cartão de Crédito" onchange="gatherPaymentMethods()"> 💳 Cartão de Crédito</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><input type="checkbox" id="pay-boleto" value="Boleto" onchange="gatherPaymentMethods()"> 📄 Boleto</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><input type="checkbox" id="pay-transfer" value="Transferência" onchange="gatherPaymentMethods()"> 🏦 Transferência</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><input type="checkbox" id="pay-cash" value="Dinheiro" onchange="gatherPaymentMethods()"> 💵 Dinheiro</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>💳 Parcelamento no Cartão (máximo de parcelas)</label>
+          <select id="cfg-installments">
+            <option value="1">À vista (sem parcelamento)</option>
+            <option value="2">2x</option>
+            <option value="3">3x</option>
+            <option value="4">4x</option>
+            <option value="6">6x</option>
+            <option value="10">10x</option>
+            <option value="12">12x</option>
+          </select>
+          <p class="form-hint">Exibido como informação no checkout (processamento via Yampi).</p>
+        </div>
+        <div class="form-group">
+          <label>Desconto PIX</label>
+          <div class="toggle-row" style="margin-top:8px;padding:0;">
+            <div><div class="toggle-label">Ativar 5% de desconto no PIX</div><div class="toggle-desc">Exibe o desconto ao lado da opção PIX no checkout</div></div>
+            <label class="toggle"><input type="checkbox" id="cfg-pixDiscount" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RETIRADA NA LOJA -->
+    <div class="card">
+      <div class="card-title">🏪 Retirada na Loja</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Habilitar opção "Retirar na loja"</div>
+          <div class="toggle-desc">O cliente poderá escolher retirar o pedido pessoalmente, sem custo de frete</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-pickupEnabled" onchange="togglePickupAddress()"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="pickupAddressBlock" style="margin-top:14px;display:none;">
+        <div class="form-group">
+          <label>Endereço da loja (enviado na mensagem do WhatsApp)</label>
+          <input type="text" id="cfg-pickupAddress" placeholder="Rua das Flores, 123 — Centro — Juazeiro do Norte/CE">
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">🚚 Configurações de Frete (Melhor Envio)</div>
       <div class="form-row">
@@ -454,43 +511,18 @@
   <!-- PAGE: BANNER -->
   <div class="section-page" id="page-banner">
     <div class="page-header">
-      <div class="page-title">🖼️ Carrossel <span>de Banners</span></div>
-      <button class="btn btn-primary" onclick="saveBanners()">💾 Salvar Banners</button>
+      <div class="page-title">🖼️ Banner <span>Hero</span></div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar</button>
     </div>
-
-    <div class="card" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;border:none;">
-      <div class="card-title" style="color:var(--secondary);">📐 Especificações de Imagem</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:8px;">
-        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:6px;">📏</div>
-          <div style="font-size:20px;font-weight:800;color:var(--secondary);">1920 × 600 px</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Tamanho ideal (desktop)</div>
-        </div>
-        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:6px;">📱</div>
-          <div style="font-size:20px;font-weight:800;color:var(--secondary);">800 × 600 px</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Mínimo aceito (mobile)</div>
-        </div>
-        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:6px;">⚖️</div>
-          <div style="font-size:20px;font-weight:800;color:var(--secondary);">Até 500 KB</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Tamanho máximo do arquivo</div>
-        </div>
-        <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
-          <div style="font-size:20px;font-weight:800;color:var(--secondary);">JPG ou PNG</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;">Formatos aceitos</div>
-        </div>
-      </div>
-      <div style="margin-top:14px;padding:10px 14px;background:rgba(230,57,70,.15);border-radius:8px;font-size:13px;border-left:3px solid var(--primary);">
-        💡 <strong>Dica:</strong> Use o <a href="https://imgbb.com" target="_blank" style="color:var(--secondary);">imgbb.com</a> para hospedar suas imagens. Cole a URL do <strong>Direct Link</strong> nos campos abaixo. Uma camada escura é aplicada automaticamente para o texto ficar legível.
-      </div>
-    </div>
-
-    <div id="bannerSlidesContainer"></div>
-
     <div class="card">
-      <div class="card-title">📊 Estatísticas (aparecem no Banner 1)</div>
+      <div class="card-title">🎨 Conteúdo do Banner</div>
+      <div class="form-group"><label>URL da Imagem de Fundo</label><input type="url" id="cfg-heroBg" placeholder="https://..."></div>
+      <div class="form-group"><label>Etiqueta / Tag</label><input type="text" id="cfg-heroTag" placeholder="Loja Oficial"></div>
+      <div class="form-group"><label>Título Principal (suporta HTML)</label><input type="text" id="cfg-heroTitle" placeholder='ALPHA <span style="color:var(--primary)">SUPLEMENTOS</span>'></div>
+      <div class="form-group"><label>Subtítulo</label><input type="text" id="cfg-heroSubtitle" placeholder="Qualidade e performance..."></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Estatísticas (3 números)</div>
       <div id="heroStatsFields"></div>
       <button class="btn btn-secondary btn-sm" onclick="addHeroStat()">+ Adicionar Estatística</button>
     </div>
@@ -747,7 +779,36 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Nº de Avaliações</label><input type="number" id="p-reviews" placeholder="248"></div>
-      <div class="form-group"><label>URL da Imagem</label><input type="url" id="p-image" placeholder="https://..."></div>
+      <div class="form-group">
+        <label>URL da Imagem</label>
+        <input type="url" id="p-image" placeholder="https://..." oninput="previewProductImage()">
+      </div>
+    </div>
+
+    <!-- AI IMAGE SEARCH -->
+    <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+          <div style="color:#fff;font-weight:700;font-size:14px;">Busca Automática de Imagem com IA</div>
+          <div style="color:rgba(255,255,255,.6);font-size:12px;">Preencha o nome do produto e clique para buscar a melhor imagem</div>
+        </div>
+      </div>
+      <button type="button" id="btnAiImage" onclick="searchImageAI()" style="width:100%;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:12px;font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span id="aiImgIcon">🔍</span> <span id="aiImgLabel">Buscar Imagem pelo Nome do Produto</span>
+      </button>
+      <div id="aiImgStatus" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.7);display:none;"></div>
+      <!-- Results grid -->
+      <div id="aiImgResults" style="display:none;margin-top:12px;">
+        <div style="color:rgba(255,255,255,.8);font-size:12px;margin-bottom:8px;">👇 Clique na imagem que melhor representa o produto:</div>
+        <div id="aiImgGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="p-image-preview" style="margin-bottom:8px;display:none;">
+      <img id="p-image-preview-img" src="" alt="Preview" style="max-height:120px;max-width:100%;border-radius:8px;border:2px solid var(--border);object-fit:contain;">
+      <span id="p-image-status" style="display:block;font-size:12px;margin-top:4px;"></span>
     </div>
     <div class="form-group"><label>Sabores / Variações (separados por vírgula)</label><input type="text" id="p-flavors" placeholder="Chocolate, Baunilha, Morango"></div>
     <div class="modal-footer">
@@ -878,105 +939,28 @@ function showPage(id) {
   if (idx >= 0) navItems[idx].classList.add('active');
 }
 
-
-// ============================================================
-// CAROUSEL BANNERS — 4 slides
-// ============================================================
-const BANNER_DEFAULTS = [
-  { tag:'Loja Oficial',   title:'ALPHA <span>SUPLEMENTOS</span>', subtitle:'Qualidade e performance para quem não aceita menos que o melhor.', btn:'VER PRODUTOS ↓', bg:'' },
-  { tag:'Ofertas Especiais', title:'MELHORES <span>OFERTAS</span>',  subtitle:'Preços imperdíveis em whey, creatina e pré-treino.', btn:'VER OFERTAS ↓', bg:'' },
-  { tag:'Frete Grátis',   title:'FRETE <span>GRÁTIS</span>',       subtitle:'Em compras acima de R$ 400. Aproveite agora!', btn:'COMPRAR AGORA ↓', bg:'' },
-  { tag:'Novidades',      title:'NOVOS <span>PRODUTOS</span>',      subtitle:'Confira os lançamentos que chegaram para o seu treino.', btn:'VER LANÇAMENTOS ↓', bg:'' },
-];
-
-function renderBannerSlides() {
-  const banners = config.banners || BANNER_DEFAULTS;
-  const container = document.getElementById('bannerSlidesContainer');
-  if (!container) return;
-  container.innerHTML = banners.map((b, i) => `
-    <div class="card" style="border-left:4px solid var(--primary);">
-      <div class="card-title" style="display:flex;align-items:center;gap:10px;">
-        <span style="background:var(--primary);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">${i+1}</span>
-        Banner ${i+1}${i===0?' (Principal)':''}
-        <span style="font-size:12px;color:var(--muted);font-weight:400;margin-left:auto;">slide ${i+1} de 4 — troca automática a cada 5s</span>
-      </div>
-
-      <div class="form-group">
-        <label>🖼️ URL da Imagem de Fundo
-          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:8px;">Recomendado: 1920×600 px · máx 500 KB · JPG ou PNG · hospede no imgbb.com</span>
-        </label>
-        <input type="url" id="banner-bg-${i}" value="${b.bg||''}" placeholder="https://i.ibb.co/... (1920×600 px)" oninput="previewBannerImg(${i})">
-        <div id="banner-img-preview-${i}" style="margin-top:8px;display:${b.bg?'block':'none'};">
-          <img id="banner-img-${i}" src="${b.bg||''}" alt="Preview" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;border:2px solid var(--border);">
-          <span id="banner-img-status-${i}" style="display:block;font-size:12px;margin-top:4px;color:var(--success);">✅ Imagem carregada</span>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group"><label>🏷️ Etiqueta / Tag</label><input type="text" id="banner-tag-${i}" value="${b.tag||''}" placeholder="Loja Oficial"></div>
-        <div class="form-group"><label>🔘 Texto do Botão</label><input type="text" id="banner-btn-${i}" value="${b.btn||''}" placeholder="VER PRODUTOS ↓"></div>
-      </div>
-      <div class="form-group"><label>📝 Título <span style="font-size:11px;color:var(--muted);font-weight:400;">(suporta &lt;span&gt; para colorir)</span></label><input type="text" id="banner-title-${i}" value="${(b.title||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" placeholder='ALPHA &lt;span&gt;SUPLEMENTOS&lt;/span&gt;'></div>
-      <div class="form-group"><label>💬 Subtítulo</label><input type="text" id="banner-subtitle-${i}" value="${b.subtitle||''}" placeholder="Qualidade e performance..."></div>
-    </div>
-  `).join('');
-}
-
-function previewBannerImg(i) {
-  const url = (document.getElementById('banner-bg-'+i)?.value||'').trim();
-  const box = document.getElementById('banner-img-preview-'+i);
-  const img = document.getElementById('banner-img-'+i);
-  const st  = document.getElementById('banner-img-status-'+i);
-  if (!url) { box.style.display='none'; return; }
-  box.style.display='block';
-  if (!url.startsWith('http')) {
-    img.style.display='none';
-    st.style.color='var(--primary)';
-    st.textContent='❌ URL inválida! Use https://';
-    return;
-  }
-  img.style.display='block';
-  img.src = url;
-  st.style.color='var(--muted)';
-  st.textContent='⏳ Carregando imagem...';
-  img.onload  = () => { st.style.color='var(--success)'; st.textContent='✅ Imagem OK ('+img.naturalWidth+'×'+img.naturalHeight+'px) — aparecerá no carrossel!'; };
-  img.onerror = () => { st.style.color='var(--primary)'; st.textContent='❌ Não carregou. Verifique a URL.'; img.style.display='none'; };
-}
-
-function gatherBanners() {
-  const banners = [];
-  for (let i = 0; i < 4; i++) {
-    banners.push({
-      bg:       (document.getElementById('banner-bg-'+i)?.value||'').trim(),
-      tag:      document.getElementById('banner-tag-'+i)?.value||'',
-      title:    document.getElementById('banner-title-'+i)?.value||'',
-      subtitle: document.getElementById('banner-subtitle-'+i)?.value||'',
-      btn:      document.getElementById('banner-btn-'+i)?.value||'',
-    });
-  }
-  return banners;
-}
-
-function saveBanners() {
-  config.banners = gatherBanners();
-  // also gather hero stats
-  const stats = [];
-  document.querySelectorAll('.hero-stat-row').forEach(row => {
-    const num = row.querySelector('.hs-num')?.value;
-    const lbl = row.querySelector('.hs-lbl')?.value;
-    if (num || lbl) stats.push({ num, lbl });
-  });
-  if (stats.length) config.heroStats = stats;
-  localStorage.setItem('alphaConfig', JSON.stringify(config));
-  localStorage.setItem('alphaProducts', JSON.stringify(products));
-  showToast('✅ Banners salvos! Clique ☁️ Salvar no GitHub para publicar.');
-}
-
 // ============================================================
 // CONFIG
 // ============================================================
+function gatherPaymentMethods() {
+  const checkboxes = ['pay-pix','pay-card','pay-boleto','pay-transfer','pay-cash'];
+  config.paymentMethods = checkboxes
+    .filter(id => document.getElementById(id)?.checked)
+    .map(id => document.getElementById(id).value);
+}
+function populatePaymentMethods() {
+  const methods = config.paymentMethods || ['PIX','Cartão de Crédito','Boleto'];
+  const map = { 'PIX':'pay-pix', 'Cartão de Crédito':'pay-card', 'Boleto':'pay-boleto', 'Transferência':'pay-transfer', 'Dinheiro':'pay-cash' };
+  Object.values(map).forEach(id => { const el=document.getElementById(id); if(el) el.checked=false; });
+  methods.forEach(m => { const el=document.getElementById(map[m]); if(el) el.checked=true; });
+}
+function togglePickupAddress() {
+  const enabled = document.getElementById('cfg-pickupEnabled')?.checked;
+  const block = document.getElementById('pickupAddressBlock');
+  if (block) block.style.display = enabled ? 'block' : 'none';
+}
 function populateConfigFields() {
-  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration'];
+  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration','installments','pickupAddress'];
   fields.forEach(f => {
     const el = document.getElementById('cfg-'+f);
     if (el && config[f] !== undefined) el.value = config[f];
@@ -996,8 +980,18 @@ function populateConfigFields() {
   // Upsell timer
   const ut = document.getElementById('cfg-upsellTimer');
   if (ut) ut.checked = config.upsellTimer !== false;
-  // Banner slides
-  renderBannerSlides();
+  // Payment methods
+  populatePaymentMethods();
+  // Installments
+  setVal('cfg-installments', config.installments || '1');
+  // PIX discount
+  const pd = document.getElementById('cfg-pixDiscount');
+  if (pd) pd.checked = config.pixDiscount !== false;
+  // Pickup
+  const pu = document.getElementById('cfg-pickupEnabled');
+  if (pu) pu.checked = !!config.pickupEnabled;
+  setVal('cfg-pickupAddress', config.pickupAddress || '');
+  togglePickupAddress();
 }
 function setVal(id, val, type) {
   const el = document.getElementById(id);
@@ -1006,7 +1000,7 @@ function setVal(id, val, type) {
   else if (val !== undefined && val !== null) el.value = val;
 }
 function gatherConfig() {
-  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration'];
+  const fields = ['storeName','cnpj','whatsapp','freeShipping','logoUrl','favicon','melhorEnvioToken','cepOrigem','peso','altura','largura','comprimento','heroBg','heroTag','heroTitle','heroSubtitle','colorPrimary','colorSecondary','colorBg','colorCard','upsellDuration','installments','pickupAddress'];
   fields.forEach(f => {
     const el = document.getElementById('cfg-'+f);
     if (el) config[f] = el.value;
@@ -1031,9 +1025,6 @@ function gatherConfig() {
     if (num || lbl) stats.push({ num, lbl });
   });
   if (stats.length) config.heroStats = stats;
-  // Gather banners if on banner page
-  const bc = document.getElementById('bannerSlidesContainer');
-  if (bc && bc.children.length) config.banners = gatherBanners();
 }
 function saveConfig() {
   gatherConfig();
@@ -1444,6 +1435,205 @@ function showToast(msg) {
 }
 
 // ============================================================
+// IMAGE SEARCH — SEM API, SEM CUSTO
+// ============================================================
+
+// Fontes de busca gratuitas (CORS-friendly via proxy público)
+const IMG_SOURCES = [
+  // DuckDuckGo image search (retorna JSON com imagens)
+  q => `https://duckduckgo.com/?q=${encodeURIComponent(q+" suplemento site:integralmédica.com.br OR site:growth.com.br OR site:buscape.com.br OR site:amazon.com.br")}&ia=images&iax=images`,
+  // Open Library / Wikipedia (fallback)
+  q => `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json`,
+];
+
+// Banco de imagens hardcoded para marcas populares de suplementos BR
+const BRAND_IMAGES = {
+  'integralmedica': 'https://m.media-amazon.com/images/I/',
+  'growth': 'https://cdn.growthsupplements.com.br/',
+  'darkness': 'https://m.media-amazon.com/images/',
+  'optimum': 'https://m.media-amazon.com/images/',
+};
+
+// Queries de busca otimizadas por categoria
+function buildSearchQuery(name, category, desc) {
+  const cat = (category || '').toLowerCase();
+  const n   = name.trim();
+  // Add brand/type context for better results
+  const suffixes = {
+    'proteína': 'whey protein suplemento embalagem',
+    'proteínas': 'whey protein suplemento embalagem',
+    'creatina': 'creatina monohidratada suplemento pote',
+    'pré-treino': 'pre workout suplemento pote',
+    'pre-treino': 'pre workout suplemento pote',
+    'hipercalórico': 'hipercalorico mass gainer suplemento',
+    'emagrecedor': 'termogênico suplemento emagrecedor',
+    'colágeno': 'colágeno hidrolisado suplemento',
+    'vitamina': 'vitamina suplemento cápsula',
+    'aminoácido': 'aminoácido suplemento bcaa',
+  };
+  const suffix = suffixes[cat] || 'suplemento produto embalagem';
+  return `${n} ${suffix}`;
+}
+
+// Busca real usando Open Graph / scraping de imagens públicas via AllOrigins
+async function fetchImagesForProduct(name, category, desc) {
+  const query = buildSearchQuery(name, category, desc);
+  const encoded = encodeURIComponent(query);
+
+  // Estratégia 1: Bing Images (via AllOrigins proxy para contornar CORS)
+  // AllOrigins é um proxy CORS público gratuito
+  const bingUrl = `https://www.bing.com/images/search?q=${encoded}&form=HDRSC2&first=1&tsc=ImageHoverTitle`;
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(bingUrl)}`;
+
+  try {
+    const res  = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    const body = data.contents || '';
+
+    // Extract image URLs from Bing HTML response
+    const imgRegex = /murl&quot;:&quot;(https?:[^&]+\.(jpg|jpeg|png|webp))/gi;
+    const matches  = [...body.matchAll(imgRegex)];
+    const urls     = [...new Set(matches.map(m => m[1].replace(/\u0026/g,'&')))].slice(0, 8);
+
+    if (urls.length > 0) return urls;
+  } catch(e) {
+    console.warn('Bing via proxy failed:', e.message);
+  }
+
+  // Estratégia 2: DuckDuckGo via proxy
+  try {
+    const ddgUrl   = `https://duckduckgo.com/?q=${encoded}&iax=images&ia=images`;
+    const proxyDdg = `https://api.allorigins.win/get?url=${encodeURIComponent(ddgUrl)}`;
+    const res2     = await fetch(proxyDdg, { signal: AbortSignal.timeout(8000) });
+    const data2    = await res2.json();
+    const body2    = data2.contents || '';
+    const reg2     = /"thumbnail":"(https?:[^"]+)"/g;
+    const m2       = [...body2.matchAll(reg2)];
+    const urls2    = [...new Set(m2.map(m => m[1]))].slice(0, 8);
+    if (urls2.length > 0) return urls2;
+  } catch(e) {
+    console.warn('DDG via proxy failed:', e.message);
+  }
+
+  // Estratégia 3: Google Images via proxy (último recurso)
+  try {
+    const gUrl   = `https://www.google.com/search?q=${encoded}&tbm=isch&hl=pt-BR`;
+    const proxyG = `https://api.allorigins.win/get?url=${encodeURIComponent(gUrl)}`;
+    const resG   = await fetch(proxyG, { signal: AbortSignal.timeout(8000) });
+    const dataG  = await resG.json();
+    const bodyG  = dataG.contents || '';
+    const regG   = /\["(https?:\/\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)",\d+,\d+\]/gi;
+    const mG     = [...bodyG.matchAll(regG)];
+    const urlsG  = [...new Set(mG.map(m => m[1]))].filter(u => !u.includes('google.com')).slice(0, 8);
+    if (urlsG.length > 0) return urlsG;
+  } catch(e) {
+    console.warn('Google via proxy failed:', e.message);
+  }
+
+  return []; // All strategies failed
+}
+
+async function searchImageAI() {
+  const name      = (document.getElementById('p-name')?.value || '').trim();
+  const category  = (document.getElementById('p-category')?.value || '').trim();
+  const desc      = (document.getElementById('p-descShort')?.value || '').trim();
+
+  if (!name) { showToast('❌ Preencha o Nome do Produto antes de buscar!'); return; }
+
+  const btn    = document.getElementById('btnAiImage');
+  const icon   = document.getElementById('aiImgIcon');
+  const label  = document.getElementById('aiImgLabel');
+  const status = document.getElementById('aiImgStatus');
+  const results= document.getElementById('aiImgResults');
+  const grid   = document.getElementById('aiImgGrid');
+
+  btn.disabled = true;
+  icon.textContent  = '⏳';
+  label.textContent = 'Buscando imagens...';
+  status.style.display = 'block';
+  status.textContent   = `🔍 Buscando imagens para: "${name}"`;
+  results.style.display = 'none';
+  grid.innerHTML = '';
+
+  const query = buildSearchQuery(name, category, desc);
+  status.textContent = `🔍 Procurando: "${query}"`;
+
+  const urls = await fetchImagesForProduct(name, category, desc);
+
+  if (urls.length === 0) {
+    // Fallback: show manual search links
+    status.innerHTML = `⚠️ Busca automática indisponível no momento. 
+      <br>👉 <a href="https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch" target="_blank" style="color:#ff6b35;">Buscar no Google Images</a> e cole a URL acima.
+      <br>👉 <a href="https://www.bing.com/images/search?q=${encodeURIComponent(query)}" target="_blank" style="color:#ff6b35;">Buscar no Bing Images</a>`;
+    btn.disabled = false;
+    icon.textContent  = '🔍';
+    label.textContent = 'Tentar Novamente';
+    return;
+  }
+
+  // Render image grid — test each URL
+  status.textContent = `✅ ${urls.length} imagens encontradas! Clique na melhor:`;
+  
+  grid.innerHTML = urls.map((url, i) => `
+    <div onclick="selectAiImage(this, '${url.replace(/'/g,"\'")}')"
+         style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.2);
+                transition:all .2s;background:#fff;position:relative;"
+         onmouseover="this.style.borderColor='var(--secondary)';this.style.transform='scale(1.05)'"
+         onmouseout="this.style.borderColor='rgba(255,255,255,.2)';this.style.transform='scale(1)'">
+      <img src="${url}"
+           alt="Imagem ${i+1}"
+           style="width:100%;height:85px;object-fit:contain;background:#f8f8f8;display:block;"
+           onerror="this.parentElement.style.opacity='.3';this.parentElement.style.pointerEvents='none'">
+      <div id="check-${i}" style="display:none;position:absolute;top:4px;right:4px;background:var(--success);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;display:none;align-items:center;justify-content:center;">✓</div>
+    </div>
+  `).join('');
+
+  results.style.display = 'block';
+  btn.disabled = false;
+  icon.textContent  = '🔄';
+  label.textContent = 'Buscar Novamente';
+}
+
+function selectAiImage(el, url) {
+  // Highlight selected card
+  document.querySelectorAll('#aiImgGrid > div').forEach(d => {
+    d.style.borderColor = 'rgba(255,255,255,.2)';
+    d.style.transform   = 'scale(1)';
+  });
+  el.style.borderColor = 'var(--success)';
+  el.style.transform   = 'scale(1.05)';
+
+  // Set URL in input
+  const input = document.getElementById('p-image');
+  if (input) input.value = url;
+
+  document.getElementById('aiImgStatus').textContent = '✅ Imagem selecionada! Confira o preview abaixo.';
+  previewProductImage();
+  showToast('✅ Imagem aplicada!');
+}
+
+function previewProductImage() {
+  const url = (document.getElementById('p-image')?.value || '').trim();
+  const box = document.getElementById('p-image-preview');
+  const img = document.getElementById('p-image-preview-img');
+  const st  = document.getElementById('p-image-status');
+  if (!box) return;
+  if (!url) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  if (!url.startsWith('http')) {
+    if (img) img.style.display = 'none';
+    if (st)  { st.style.color = 'var(--primary)'; st.textContent = '❌ URL inválida!'; }
+    return;
+  }
+  if (img) { img.style.display = 'block'; img.src = url; }
+  if (st)  { st.style.color = 'var(--muted)'; st.textContent = '⏳ Carregando...'; }
+  if (img) {
+    img.onload  = () => { st.style.color='var(--success)'; st.textContent='✅ Imagem OK — aparecerá na loja!'; };
+    img.onerror = () => { st.style.color='var(--primary)'; st.textContent='❌ Imagem bloqueada. Tente outra ou cole a URL manualmente.'; img.style.display='none'; };
+  }
+}
+
+// ============================================================
 // GITHUB SYNC
 // ============================================================
 const GH_USER   = 'vitrinealphasuplementos';
@@ -1487,67 +1677,63 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
-async function ghCommitFile(tok, filename, content, message) {
-  // Buscar SHA atual
-  const getRes = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}`,
-    { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-  );
-  let sha = null;
-  if (getRes.ok) { sha = (await getRes.json()).sha; }
-
-  const body = { message, content, branch: GH_BRANCH };
-  if (sha) body.sha = sha;
-
-  const putRes = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
-    {
-      method: 'PUT',
-      headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    }
-  );
-  if (!putRes.ok) {
-    const err = await putRes.json();
-    throw new Error(err.message || putRes.status);
-  }
-  return putRes;
-}
-
 async function syncGitHub() {
   const tok = localStorage.getItem('gh_token');
-  if (!tok) { openTokenModal(); return; }
+  if (!tok) {
+    openTokenModal();
+    return;
+  }
 
   showToast('⏳ Sincronizando com GitHub...');
 
   try {
-    const ts = new Date().toLocaleString('pt-BR');
-
-    // 1. Salvar produtos.json
-    await ghCommitFile(
-      tok,
-      'produtos.json',
-      btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2)))),
-      `Admin: atualiza produtos — ${ts}`
+    // 1. Buscar SHA atual
+    const getRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`,
+      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
     );
-
-    // 2. Salvar config.json (inclui banners, cores, etc.)
-    gatherConfig();
-    await ghCommitFile(
-      tok,
-      'config.json',
-      btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2)))),
-      `Admin: atualiza config — ${ts}`
-    );
-
-    showToast('✅ produtos.json e config.json salvos no GitHub!');
-  } catch (e) {
-    if (e.message && e.message.includes('401')) {
-      showToast('❌ Token inválido ou expirado. Atualize o token.');
-      openTokenModal();
-    } else {
-      showToast('❌ Erro: ' + e.message);
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
     }
+
+    // 2. Montar conteúdo
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+    const body = {
+      message: `Admin: atualiza produtos — ${new Date().toLocaleString('pt-BR')}`,
+      content,
+      branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    // 3. Commit
+    const putRes = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${tok}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (putRes.ok) {
+      showToast('✅ produtos.json salvo no GitHub!');
+    } else {
+      const err = await putRes.json();
+      if (putRes.status === 401) {
+        showToast('❌ Token inválido ou expirado. Atualize o token.');
+        openTokenModal();
+      } else {
+        showToast('❌ Erro: ' + (err.message || putRes.status));
+      }
+    }
+  } catch (e) {
+    showToast('❌ Erro de rede: ' + e.message);
   }
 }
 
