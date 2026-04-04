@@ -1715,68 +1715,37 @@ function skipToken() {
   showToast('Modo local — produtos salvos só neste navegador.');
 }
 
-async function ghGetSHA(tok, filename) {
-  // Usa a API de refs/git para evitar qualquer cache do browser
-  // Busca a árvore do commit mais recente para pegar o SHA exato do blob
-  try {
-    // 1. Pega o SHA do último commit da branch
-    const refRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/git/refs/heads/${GH_BRANCH}`,
-      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-    );
-    if (!refRes.ok) return null;
-    const refData = await refRes.json();
-    const commitSha = refData.object?.sha;
-    if (!commitSha) return null;
-
-    // 2. Pega a tree do commit
-    const treeRes = await fetch(
-      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/git/trees/${commitSha}`,
-      { headers: { Authorization: `token ${tok}`, Accept: 'application/vnd.github+json' } }
-    );
-    if (!treeRes.ok) return null;
-    const treeData = await treeRes.json();
-
-    // 3. Encontra o blob do arquivo na tree
-    const file = (treeData.tree || []).find(f => f.path === filename);
-    return file?.sha || null;
-  } catch(e) {
-    return null;
-  }
+async function ghGetFileSHA(tok, filename) {
+  // Usa /contents diretamente — retorna o SHA do blob que a API espera no PUT
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}?ref=${GH_BRANCH}&_=${Date.now()}`,
+    {
+      headers: {
+        Authorization: `token ${tok}`,
+        Accept: 'application/vnd.github+json',
+        'If-None-Match': '',   // força ignorar ETag cacheado
+      },
+      cache: 'no-store',       // instrui o browser a nunca usar cache
+    }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  console.log(`[SHA] ${filename} →`, data.sha);
+  return data.sha || null;
 }
 
 async function ghCommitFile(tok, filename, jsonData, message) {
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(jsonData, null, 2))));
 
-  // Busca SHA fresco via git tree (nunca tem cache)
-  const sha = await ghGetSHA(tok, filename);
+  // Tenta até 4 vezes, buscando SHA fresco a cada tentativa
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const sha = await ghGetFileSHA(tok, filename);
+    console.log(`[Commit] ${filename} attempt ${attempt}, SHA:`, sha);
 
-  const body = { message, content, branch: GH_BRANCH };
-  if (sha) body.sha = sha;
+    const body = { message: `${message} (t${attempt})`, content, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
 
-  const putRes = await fetch(
-    `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${tok}`,
-        Accept: 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }
-  );
-
-  if (putRes.ok) return true;
-
-  // 409: SHA mudou entre o GET e o PUT — tenta uma vez mais
-  if (putRes.status === 409) {
-    await new Promise(r => setTimeout(r, 2000));
-    const sha2 = await ghGetSHA(tok, filename);
-    const body2 = { message, content, branch: GH_BRANCH };
-    if (sha2) body2.sha = sha2;
-
-    const putRes2 = await fetch(
+    const putRes = await fetch(
       `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${filename}`,
       {
         method: 'PUT',
@@ -1785,16 +1754,26 @@ async function ghCommitFile(tok, filename, jsonData, message) {
           Accept: 'application/vnd.github+json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body2),
+        body: JSON.stringify(body),
       }
     );
-    if (putRes2.ok) return true;
-    const err2 = await putRes2.json();
-    throw new Error(err2.message || `HTTP ${putRes2.status}`);
-  }
 
-  const err = await putRes.json();
-  throw new Error(err.message || `HTTP ${putRes.status}`);
+    if (putRes.ok) {
+      console.log(`[Commit] ${filename} ✅ success on attempt ${attempt}`);
+      return true;
+    }
+
+    const errData = await putRes.json();
+    console.error(`[Commit] ${filename} ❌ attempt ${attempt}:`, putRes.status, errData.message);
+
+    if (putRes.status === 409 && attempt < 4) {
+      // Espera crescente: 1s, 2s, 3s
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+      continue;
+    }
+
+    throw new Error(`${filename}: ${errData.message || 'HTTP ' + putRes.status}`);
+  }
 }
 
 async function syncGitHub() {
