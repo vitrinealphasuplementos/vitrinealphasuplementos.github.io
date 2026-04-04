@@ -1788,20 +1788,29 @@ async function syncGitHub() {
     // 1. Coleta TODOS os campos dos formulários para o objeto config
     gatherConfig();
 
-    // 2. Persiste no localStorage também (para abertura offline)
+    // 2. Persiste no localStorage (inclui campos sensíveis, só fica no browser)
     localStorage.setItem('alphaConfig', JSON.stringify(config));
     localStorage.setItem('alphaProducts', JSON.stringify(products));
 
-    // 3. Salva produtos.json no GitHub
+    // 3. Monta versão LIMPA do config para o GitHub
+    // Remove campos sensíveis que o GitHub Push Protection bloqueia
+    const configParaGitHub = { ...config };
+    delete configParaGitHub.melhorEnvioToken; // token sensível — fica só no localStorage
+    delete configParaGitHub.cnpj;             // dado pessoal — não precisa na loja
+
+    // 4. Salva produtos.json no GitHub
+    showToast('⏳ Salvando produtos... (1/2)');
     await ghCommitFile(tok, 'produtos.json', products, `Admin: produtos — ${ts}`);
+    showToast('✅ produtos.json salvo! Aguardando...');
 
     // Aguarda GitHub processar o primeiro commit antes do segundo
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
 
-    // 4. Salva config.json no GitHub (formas de pagamento, frete, retirada, cores, etc.)
-    await ghCommitFile(tok, 'config.json', config, `Admin: config — ${ts}`);
+    // 5. Salva config.json no GitHub (sem campos sensíveis)
+    showToast('⏳ Salvando configurações... (2/2)');
+    await ghCommitFile(tok, 'config.json', configParaGitHub, `Admin: config — ${ts}`);
 
-    showToast('✅ Tudo salvo! produtos.json + config.json → loja atualiza em ~2min');
+    showToast('✅ Tudo salvo! Loja atualiza em ~2 minutos.');
 
   } catch(e) {
     if (e.message.includes('401') || e.message.includes('Bad credentials')) {
