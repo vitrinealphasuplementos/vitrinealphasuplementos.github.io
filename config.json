@@ -1,10 +1,56 @@
 {
-  "storeName": "Alpha Suplementos",
-  "cnpj": "42.256.410/0001-48",
+  "storeName": "Alpha suplementos",
   "whatsapp": "5588994427635",
-  "freeShipping": 400,
+  "freeShipping": "400",
   "colorPrimary": "#e63946",
   "colorSecondary": "#ff6b35",
   "colorBg": "#f4f4f4",
-  "colorCard": "#ffffff"
+  "colorCard": "#ffffff",
+  "paymentMethods": [
+    "PIX",
+    "Cartão de Crédito",
+    "Dinheiro"
+  ],
+  "logoUrl": "",
+  "favicon": "",
+  "cepOrigem": "62320-053",
+  "peso": "",
+  "altura": "",
+  "largura": "",
+  "comprimento": "",
+  "heroBg": "",
+  "heroTag": "",
+  "heroTitle": "",
+  "heroSubtitle": "",
+  "upsellDuration": "10",
+  "installments": "6",
+  "pickupAddress": "Rua Deputado Manoel Francisco, 478",
+  "popup": {
+    "enabled": false,
+    "frequency": "always",
+    "dateStart": "",
+    "dateEnd": "",
+    "image": "",
+    "title": "",
+    "desc": "",
+    "coupon": "",
+    "btnText": "",
+    "btnAction": "close"
+  },
+  "heroStats": [
+    {
+      "num": "5000+",
+      "lbl": "Clientes"
+    },
+    {
+      "num": "100%",
+      "lbl": "Original"
+    },
+    {
+      "num": "24h",
+      "lbl": "Atendimento"
+    }
+  ],
+  "pixDiscount": true,
+  "pickupEnabled": true
 }
